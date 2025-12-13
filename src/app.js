@@ -362,6 +362,7 @@ function initExplorerControls() {
 }
 
 function main() {
+  initTabs();
   initDiagnostics();
   initImporter();
   renderQuestList();
