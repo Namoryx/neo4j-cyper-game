@@ -79,4 +79,31 @@
 ## 테스트
 
 - 정적 페이지는 브라우저에서 직접 열어 확인합니다.
-- Worker는 배포 후 `curl -X GET https://<worker>.workers.dev/health` 로 헬스를 확인하세요.
+- Worker는 배포 후 아래 방법으로 엔드포인트를 점검합니다.
+  - 헬스 체크(실제 배포본):
+
+    ```bash
+    # 200 OK + 본문 "neo4j-runner ok"가 오면 정상
+    curl -i https://neo4j-runner.neo4j-namoryx.workers.dev/health
+    ```
+
+  - READ 쿼리 실행(실제 배포본):
+
+    ```bash
+    curl -s -X POST \
+      -H 'Content-Type: application/json' \
+      -d '{"cypher":"RETURN 1 AS ok"}' \
+      https://neo4j-runner.neo4j-namoryx.workers.dev/run
+    ```
+
+    200 응답으로 `{"ok":true,...,"data":[[{"ok":1}]]}` 형태가 오면 AuraDB/Worker가 정상 동작합니다. (CORS가 막히면 브라우저 콘솔에서 Blocked by CORS 에러가 발생하니, `ALLOWED_ORIGINS`에 호출 Origin이 포함됐는지 확인하세요.)
+
+  - READ 쿼리 실행(PowerShell 예시):
+
+    ```powershell
+    $uri = "https://neo4j-runner.neo4j-namoryx.workers.dev/run"
+    $body = @{ cypher = "RETURN 1 AS ok" } | ConvertTo-Json -Compress
+    Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/json" -Body $body
+    ```
+
+    AuraDB 자격 증명은 Worker 시크릿(NEO4J_USER/NEO4J_PASSWORD)으로 주입되므로 클라이언트는 별도 인증 없이 호출할 수 있습니다.
