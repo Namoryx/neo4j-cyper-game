@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neo4j Cypher 퀘스트</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #111827;
+        --accent: #22d3ee;
+        --muted: #94a3b8;
+        --card: #0b1220;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+        font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+        color: #e2e8f0;
+      }
+      header {
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(8px);
+        z-index: 10;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .container {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 16px;
+        padding: 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      }
+      #quest-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #quest-list li {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+      #quest-list li:hover {
+        border-color: rgba(34, 211, 238, 0.5);
+      }
+      #quest-list li.active {
+        background: rgba(34, 211, 238, 0.12);
+        border-color: #22d3ee;
+      }
+      #quest-list li.done::after {
+        content: '완료';
+        float: right;
+        color: #4ade80;
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-right: 6px;
+        font-size: 12px;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+      .badge {
+        display: inline-block;
+        background: rgba(34, 211, 238, 0.18);
+        border: 1px solid #22d3ee;
+        color: #67e8f9;
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0a1221;
+        color: #e2e8f0;
+        padding: 12px;
+        font-size: 14px;
+        font-family: 'Courier New', monospace;
+      }
+      textarea:focus {
+        outline: 1px solid #22d3ee;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      button {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 700;
+        cursor: pointer;
+        background: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      button.primary {
+        background: linear-gradient(135deg, #06b6d4, #22d3ee);
+        color: #0b1220;
+        border: none;
+      }
+      button:hover {
+        transform: translateY(-1px);
+      }
+      #result table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      #result th,
+      #result td {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 6px 8px;
+        text-align: left;
+      }
+      #feedback {
+        margin-top: 8px;
+        color: #67e8f9;
+        min-height: 24px;
+      }
+      .diag-panel {
+        display: grid;
+        grid-template-columns: 220px 1fr 220px;
+        gap: 12px;
+        align-items: start;
+        margin-top: 12px;
+      }
+      .diag-actions button {
+        width: 100%;
+        margin-bottom: 6px;
+      }
+      #diagnostic-log {
+        background: #0a1221;
+        min-height: 120px;
+        max-height: 160px;
+        overflow: auto;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+      }
+      .log-error {
+        color: #f472b6;
+      }
+      .log-info {
+        color: #cbd5e1;
+      }
+      .log-success {
+        color: #4ade80;
+      }
+      .checklist table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .checklist th,
+      .checklist td {
+        padding: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .responsive {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      @media (max-width: 960px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+        .diag-panel {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Neo4j Cypher 퀘스트</h1>
+      <p class="subtitle">GitHub Pages용 한국어 Neo4j 미션 게임 · 연결 진단을 활용해 네트워크/CORS 문제를 바로 확인하세요.</p>
+      <div class="diag-panel">
+        <div class="diag-actions card">
+          <strong>연결 진단</strong>
+          <button id="btn-health" class="primary">헬스체크</button>
+          <button id="btn-return1">RETURN 1 테스트</button>
+          <button id="btn-seed">Seed 데이터 삽입</button>
+        </div>
+        <div class="card" style="min-height: 160px;">
+          <strong>결과 로그</strong>
+          <div id="diagnostic-log"></div>
+        </div>
+        <div class="card checklist">
+          <strong>자동 체크리스트</strong>
+          <table>
+            <tr><th>항목</th><th>상태</th><th>메모</th></tr>
+            <tr data-check="health"><td>/health 응답</td><td class="status">⚠️</td><td class="note">대기</td></tr>
+            <tr data-check="return1"><td>RETURN 1</td><td class="status">⚠️</td><td class="note">대기</td></tr>
+            <tr data-check="seed"><td>시드</td><td class="status">⚠️</td><td class="note">대기</td></tr>
+          </table>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h3>퀘스트 목록</h3>
+        <ul id="quest-list"></ul>
+      </section>
+
+      <section class="card responsive">
+        <div>
+          <span class="badge" id="chapter-badge"></span>
+          <h2 id="quest-title"></h2>
+          <div class="detail-grid">
+            <div>
+              <h4>스토리</h4>
+              <p id="quest-story"></p>
+            </div>
+            <div>
+              <h4>목표</h4>
+              <p id="quest-goal"></p>
+            </div>
+            <div>
+              <h4>제약</h4>
+              <p id="quest-constraint"></p>
+            </div>
+            <div>
+              <h4>힌트</h4>
+              <p id="quest-hint"></p>
+            </div>
+          </div>
+          <div>
+            <h4>허용 연산</h4>
+            <div id="quest-allowed"></div>
+          </div>
+        </div>
+
+        <div>
+          <label for="cypher-input"><strong>Cypher 입력</strong></label>
+          <textarea id="cypher-input" placeholder="여기에 Cypher를 작성하세요"></textarea>
+          <div class="actions">
+            <button id="btn-run">실행만 하기</button>
+            <button id="btn-submit" class="primary">제출 및 채점</button>
+          </div>
+          <div id="feedback"></div>
+          <div id="result"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./src/config.js"></script>
+    <script type="module" src="./src/diagnostics.js"></script>
+    <script type="module" src="./src/quests.js"></script>
+    <script type="module" src="./src/storage.js"></script>
+    <script type="module" src="./src/checker.js"></script>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
