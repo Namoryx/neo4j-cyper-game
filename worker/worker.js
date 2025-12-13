@@ -1,171 +1,212 @@
-import neo4j from 'neo4j-driver';
+// Cloudflare Worker for Neo4j Cypher Quest
+// - CORS allowlist driven by env.ALLOWED_ORIGINS (comma-separated) with sensible defaults
+// - Read-only enforcement on /run and /submit
+// - HTTP(S) data API call (no Bolt driver) for Cloudflare compatibility
+// - Seed/reset helpers for diagnosing connectivity
 
-let cachedDriver;
+const DEFAULT_ALLOWED = new Set([
+  'https://namoryx.github.io',
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+  'http://127.0.0.1:5173',
+  'http://localhost:5173',
+]);
 
-function getCorsHeaders(origin, env) {
-  const allowedList = (env?.ALLOWED_ORIGINS || '*')
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-  const allowed = allowedList.includes('*') ? '*' : allowedList.includes(origin) ? origin : allowedList[0] || '*';
+const BLOCKED = /(CREATE|MERGE|DELETE|DETACH|SET|DROP|CALL|APOC)/i;
+
+function allowedOrigins(env) {
+  const raw = env?.ALLOWED_ORIGINS;
+  if (!raw) return DEFAULT_ALLOWED;
+  return new Set(
+    String(raw)
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean)
+  );
+}
+
+function cors(req, env) {
+  const origin = req.headers.get('Origin') || '';
+  const allowlist = allowedOrigins(env);
+
+  if (!origin) {
+    return {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    };
+  }
+
+  const allow = allowlist.has(origin) ? origin : allowlist.values().next().value || '*';
   return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
   };
 }
 
-function jsonResponse(body, status = 200, origin = '*', env) {
-  return new Response(JSON.stringify(body), {
+function json(req, obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getCorsHeaders(origin, env),
-    },
+    headers: { ...cors(req, req.env), 'Content-Type': 'application/json; charset=UTF-8' },
   });
 }
 
-function handleOptions(request, env) {
-  return new Response(null, { status: 204, headers: getCorsHeaders(request.headers.get('Origin'), env) });
+function text(req, body, status = 200) {
+  return new Response(body, {
+    status,
+    headers: { ...cors(req, req.env), 'Content-Type': 'text/plain; charset=UTF-8' },
+  });
 }
 
-function isWriteQuery(query) {
-  const upper = query.toUpperCase();
-  const forbiddenKeywords = ['CREATE ', 'MERGE ', 'DELETE ', 'DETACH ', 'REMOVE ', 'SET ', 'DROP ', 'LOAD CSV', 'CALL DBMS'];
-  return forbiddenKeywords.some((kw) => upper.includes(kw));
-}
-
-function isDangerous(query) {
-  const upper = query.toUpperCase();
-  const banned = ['APOC.', 'DBMS', 'ADMIN'];
-  return banned.some((kw) => upper.includes(kw));
-}
-
-function ensureLimit(query) {
-  const upper = query.toUpperCase();
-  if (upper.includes(' LIMIT ')) {
-    return query;
+function normalizeValue(value) {
+  if (value && typeof value === 'object') {
+    if (typeof value.low === 'number' && typeof value.high === 'number') {
+      // Neo4j integer-like
+      return Number(value.low); // high is unused for small ints
+    }
+    if (Array.isArray(value)) {
+      return value.map((v) => normalizeValue(v));
+    }
+    if ('properties' in value) {
+      return value.properties;
+    }
+    if ('value' in value && Object.keys(value).length === 1) {
+      return normalizeValue(value.value);
+    }
   }
-  return `${query}\nLIMIT 50`;
+  return value;
 }
 
-async function getDriver(env) {
-  if (!cachedDriver) {
-    cachedDriver = neo4j.driver(env.NEO4J_URI, neo4j.auth.basic(env.NEO4J_USER, env.NEO4J_PASSWORD));
-  }
-  return cachedDriver;
-}
-
-function serialize(records) {
-  return records.map((record) => {
-    const obj = record.toObject();
-    Object.keys(obj).forEach((key) => {
-      const value = obj[key];
-      if (neo4j.isInt(value)) {
-        obj[key] = value.toNumber();
-      }
-      if (Array.isArray(value)) {
-        obj[key] = value.map((v) => (neo4j.isInt(v) ? v.toNumber() : v.properties || v));
-      }
-      if (value && value.properties) {
-        obj[key] = value.properties;
-      }
+function mapLegacyResult(payload) {
+  const result = payload?.results?.[0];
+  if (!result) return [];
+  const columns = result.columns || [];
+  const rows = result.data || [];
+  return rows.map((entry) => {
+    const row = entry.row || entry;
+    const obj = {};
+    columns.forEach((col, idx) => {
+      obj[col] = normalizeValue(row[idx]);
     });
     return obj;
   });
 }
 
-async function runReadQuery(env, cypher) {
-  if (isWriteQuery(cypher)) {
-    throw new Error('READ 전용 엔드포인트에서 쓰기 쿼리는 허용되지 않습니다.');
-  }
-  if (isDangerous(cypher)) {
-    throw new Error('보안상 차단된 쿼리입니다.');
-  }
-  const driver = await getDriver(env);
-  const session = driver.session();
-  const enforced = ensureLimit(cypher);
-  const result = await session.run(enforced);
-  await session.close();
-  return serialize(result.records);
+function mapDataApiResult(payload) {
+  const fields = payload?.data?.fields || [];
+  const records = payload?.data?.records || [];
+  if (!fields.length || !records.length) return null;
+  const names = fields.map((f) => f.name || f.field || f.key);
+  return records.map((record) => {
+    const values = record.values || record.data || record.row || [];
+    const obj = {};
+    names.forEach((name, idx) => {
+      const v = values[idx]?.value ?? values[idx];
+      obj[name] = normalizeValue(v);
+    });
+    return obj;
+  });
 }
 
-async function seedData(env) {
-  const driver = await getDriver(env);
-  const session = driver.session();
-  const tx = session.beginTransaction();
-  try {
-    await tx.run(
-      `
-      MERGE (seoul:City {name: 'Seoul'})
-      MERGE (busan:City {name: 'Busan'})
-      MERGE (daejeon:City {name: 'Daejeon'})
+function formatNeo4jRecords(payload) {
+  const dataApi = mapDataApiResult(payload);
+  if (dataApi) return dataApi;
+  return mapLegacyResult(payload);
+}
 
-      MERGE (neo:Company {name: 'NeoEnergy', industry: 'Energy', hq: 'Seoul'})
-      MERGE (cloud:Company {name: 'CloudAtlas', industry: 'Cloud', hq: 'Busan'})
-      MERGE (harbor:Company {name: 'HarborTech', industry: 'Logistics', hq: 'Busan'})
-
-      MERGE (bluebird:Project {name: 'Bluebird', status: 'active'})
-      MERGE (harborProj:Project {name: 'Harbor Revamp', status: 'planning'})
-      MERGE (skyflow:Project {name: 'SkyFlow', status: 'research'})
-
-      MERGE (jisu:Person {name: '지수', role: 'Engineer'})
-      MERGE (minho:Person {name: '민호', role: 'Analyst'})
-      MERGE (ara:Person {name: '아라', role: 'Manager'})
-      MERGE (haneul:Person {name: '하늘', role: 'DevRel'})
-      MERGE (dabin:Person {name: '다빈', role: 'Data Scientist'})
-
-      MERGE (jisu)-[:LivesIn]->(seoul)
-      MERGE (minho)-[:LivesIn]->(busan)
-      MERGE (ara)-[:LivesIn]->(daejeon)
-      MERGE (haneul)-[:LivesIn]->(seoul)
-      MERGE (dabin)-[:LivesIn]->(busan)
-
-      MERGE (jisu)-[:WorksAt]->(neo)
-      MERGE (minho)-[:WorksAt]->(harbor)
-      MERGE (ara)-[:WorksAt]->(neo)
-      MERGE (haneul)-[:WorksAt]->(cloud)
-      MERGE (dabin)-[:WorksAt]->(cloud)
-
-      MERGE (jisu)-[:CONTRIBUTES_TO]->(bluebird)
-      MERGE (dabin)-[:CONTRIBUTES_TO]->(bluebird)
-      MERGE (minho)-[:CONTRIBUTES_TO]->(harborProj)
-      MERGE (ara)-[:CONTRIBUTES_TO]->(harborProj)
-      MERGE (ara)-[:CONTRIBUTES_TO]->(bluebird)
-      MERGE (haneul)-[:CONTRIBUTES_TO]->(skyflow)
-
-      MERGE (jisu)-[:KNOWS]->(haneul)
-      MERGE (jisu)-[:KNOWS]->(ara)
-      MERGE (minho)-[:KNOWS]->(dabin)
-      MERGE (haneul)-[:KNOWS]->(minho)
-
-      MERGE (seoul)-[:ROUTE {mode: 'train', distance: 320}]->(busan)
-      MERGE (seoul)-[:ROUTE {mode: 'express', distance: 150}]->(daejeon)
-      MERGE (daejeon)-[:ROUTE {mode: 'express', distance: 200}]->(busan)
-    `
-    );
-    await tx.commit();
-    await session.close();
-    return { inserted: '샘플 데이터 준비 완료' };
-  } catch (error) {
-    await tx.rollback();
-    await session.close();
-    throw error;
+async function runNeo4j(env, cypher, params = {}) {
+  const missing = ['NEO4J_URI', 'NEO4J_USER', 'NEO4J_PASSWORD'].filter((k) => !env[k]);
+  if (missing.length) {
+    return { ok: false, error: 'Missing Worker secrets', missing };
   }
+
+  const httpBase = String(env.NEO4J_URI)
+    .replace('neo4j+s://', 'https://')
+    .replace('neo4j://', 'https://');
+
+  const db = env.NEO4J_DATABASE || 'neo4j';
+  const endpoint = `${httpBase}/db/${db}/query/v2`;
+  const auth = 'Basic ' + btoa(`${env.NEO4J_USER}:${env.NEO4J_PASSWORD}`);
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: auth,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ statement: cypher, parameters: params }),
+  });
+
+  const ct = res.headers.get('content-type') || '';
+  const bodyText = await res.text();
+  if (!ct.includes('application/json')) {
+    return {
+      ok: false,
+      error: 'Neo4j did not return JSON',
+      status: res.status,
+      contentType: ct,
+      endpoint,
+      preview: bodyText.slice(0, 300),
+    };
+  }
+
+  const payload = JSON.parse(bodyText || '{}');
+  if (!res.ok) {
+    const err = payload?.errors?.[0]?.message || payload?.error || res.statusText;
+    return { ok: false, status: res.status, error: err, endpoint };
+  }
+
+  return {
+    ok: true,
+    status: res.status,
+    endpoint,
+    records: formatNeo4jRecords(payload),
+    raw: payload,
+  };
 }
 
-async function handleRun(request, env) {
-  const body = await request.json();
-  const cypher = body.cypher || '';
-  const records = await runReadQuery(env, cypher);
-  return jsonResponse({ records }, 200, request.headers.get('Origin'), env);
+async function handleOptions(req) {
+  return new Response(null, { status: 204, headers: cors(req, req.env) });
 }
 
-async function handleSubmit(request, env) {
-  const body = await request.json();
-  const cypher = body.cypher || '';
-  const records = await runReadQuery(env, cypher);
-  return jsonResponse({ questId: body.questId, records }, 200, request.headers.get('Origin'), env);
+async function handleHealth(req, env) {
+  return text(req, 'neo4j-runner ok', 200);
+}
+
+async function handleSeed(req, env) {
+  const seedCypher = `
+    MERGE (u1:User {id:'u1'}) SET u1.name='Alice'
+    MERGE (u2:User {id:'u2'}) SET u2.name='Bob'
+    MERGE (u3:User {id:'u3'}) SET u3.name='Chris'
+
+    MERGE (i1:Item {id:'i1'}) SET i1.name='Graph DB Book', i1.category='book'
+    MERGE (i2:Item {id:'i2'}) SET i2.name='Neo4j Mug', i2.category='goods'
+    MERGE (i3:Item {id:'i3'}) SET i3.name='Cypher Cheat Sheet', i3.category='doc'
+    MERGE (i4:Item {id:'i4'}) SET i4.name='Bouldering Chalk', i4.category='sport'
+
+    WITH 1 as _
+    MATCH (u1:User {id:'u1'}), (u2:User {id:'u2'}), (u3:User {id:'u3'})
+    MATCH (i1:Item {id:'i1'}), (i2:Item {id:'i2'}), (i3:Item {id:'i3'}), (i4:Item {id:'i4'})
+
+    MERGE (u1)-[:VIEW]->(i1)
+    MERGE (u1)-[:CART]->(i2)
+    MERGE (u2)-[:VIEW]->(i1)
+    MERGE (u2)-[:BUY]->(i1)
+    MERGE (u3)-[:VIEW]->(i2)
+    MERGE (u3)-[:VIEW]->(i3)
+    MERGE (u3)-[:VIEW]->(i4)
+
+    RETURN 1 AS seeded
+  `;
+
+  const result = await runNeo4j(env, seedCypher, {});
+  const status = result.ok ? 200 : 500;
+  return json(req, result, status);
 }
 
 async function handleHealth(request, env) {
@@ -175,36 +216,51 @@ async function handleHealth(request, env) {
   } catch (error) {
     return jsonResponse({ ok: false, error: error.message }, 500, request.headers.get('Origin'), env);
   }
+
+  const result = await runNeo4j(env, cypher, params);
+  const status = result.ok ? 200 : 500;
+  return json(req, result.ok ? { records: result.records } : result, status);
 }
 
-async function handleSeed(request, env) {
-  const inserted = await seedData(env);
-  return jsonResponse(inserted, 200, request.headers.get('Origin'), env);
+async function handleSubmit(req, env) {
+  const body = await req.json().catch(() => ({}));
+  let cypher = String(body?.cypher ?? '').trim();
+  const questId = body?.questId;
+  const params = body?.params ?? {};
+
+  if (!cypher) return json(req, { ok: false, error: 'cypher is required' }, 400);
+  cypher = cypher.replace(/\s*\n\s*/g, ' ');
+  if (BLOCKED.test(cypher)) {
+    return json(req, { ok: false, error: 'Write/Procedure queries are not allowed' }, 400);
+  }
+
+  const result = await runNeo4j(env, cypher, params);
+  const status = result.ok ? 200 : 500;
+  return json(req, result.ok ? { questId, records: result.records } : result, status);
 }
 
-async function handleReset(request, env) {
-  const driver = await getDriver(env);
-  const session = driver.session();
-  await session.run('MATCH (n) DETACH DELETE n');
-  await session.close();
-  return jsonResponse({ reset: true }, 200, request.headers.get('Origin'), env);
+async function handleReset(req, env) {
+  const result = await runNeo4j(env, 'MATCH (n) DETACH DELETE n');
+  const status = result.ok ? 200 : 500;
+  return json(req, result, status);
 }
 
 export default {
-  async fetch(request, env) {
-    const { pathname } = new URL(request.url);
-    if (request.method === 'OPTIONS') {
-      return handleOptions(request, env);
-    }
+  async fetch(req, env) {
+    req.env = env; // attach for helpers
+    const url = new URL(req.url);
+
+    if (req.method === 'OPTIONS') return handleOptions(req);
+
     try {
-      if (pathname === '/health') return await handleHealth(request, env);
-      if (pathname === '/run' && request.method === 'POST') return await handleRun(request, env);
-      if (pathname === '/submit' && request.method === 'POST') return await handleSubmit(request, env);
-      if (pathname === '/seed' && request.method === 'POST') return await handleSeed(request, env);
-      if (pathname === '/reset' && request.method === 'POST') return await handleReset(request, env);
-      return jsonResponse({ error: 'Not found' }, 404, request.headers.get('Origin'), env);
-    } catch (error) {
-      return jsonResponse({ error: error.message }, 500, request.headers.get('Origin'), env);
+      if (url.pathname === '/health' && req.method === 'GET') return handleHealth(req, env);
+      if ((url.pathname === '/' || url.pathname === '/run') && req.method === 'POST') return handleRun(req, env);
+      if (url.pathname === '/submit' && req.method === 'POST') return handleSubmit(req, env);
+      if (url.pathname === '/seed' && req.method === 'POST') return handleSeed(req, env);
+      if (url.pathname === '/reset' && req.method === 'POST') return handleReset(req, env);
+      return json(req, { ok: false, error: 'Not Found', path: url.pathname }, 404);
+    } catch (e) {
+      return json(req, { ok: false, error: 'Worker exception', detail: String(e) }, 500);
     }
   },
 };
