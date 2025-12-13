@@ -209,16 +209,12 @@ async function handleSeed(req, env) {
   return json(req, result, status);
 }
 
-async function handleRun(req, env) {
-  const body = await req.json().catch(() => ({}));
-  let cypher = String(body?.cypher ?? '').trim();
-  const params = body?.params ?? {};
-
-  if (!cypher) return json(req, { ok: false, error: 'cypher is required' }, 400);
-
-  cypher = cypher.replace(/\s*\n\s*/g, ' ');
-  if (BLOCKED.test(cypher)) {
-    return json(req, { ok: false, error: 'Write/Procedure queries are not allowed' }, 400);
+async function handleHealth(request, env) {
+  try {
+    await runReadQuery(env, 'RETURN 1 AS ok');
+    return jsonResponse({ ok: true, message: 'neo4j-runner ok' }, 200, request.headers.get('Origin'), env);
+  } catch (error) {
+    return jsonResponse({ ok: false, error: error.message }, 500, request.headers.get('Origin'), env);
   }
 
   const result = await runNeo4j(env, cypher, params);
