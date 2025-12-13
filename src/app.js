@@ -130,7 +130,26 @@ function wireEvents() {
   document.querySelector('#btn-submit').addEventListener('click', onSubmit);
 }
 
+function initTabs() {
+  const buttons = Array.from(document.querySelectorAll('[data-tab-target]'));
+  const panels = Array.from(document.querySelectorAll('.tab-panel'));
+  const tabStatus = document.querySelector('#tab-status');
+
+  const activate = (target) => {
+    buttons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tabTarget === target));
+    panels.forEach((panel) => panel.classList.toggle('active', panel.dataset.tab === target));
+    const activeLabel = buttons.find((btn) => btn.dataset.tabTarget === target)?.textContent?.trim();
+    if (tabStatus && activeLabel) {
+      tabStatus.textContent = `현재 보기: ${activeLabel}`;
+    }
+  };
+
+  buttons.forEach((btn) => btn.addEventListener('click', () => activate(btn.dataset.tabTarget)));
+  activate('quest');
+}
+
 function main() {
+  initTabs();
   initDiagnostics();
   initImporter();
   renderQuestList();

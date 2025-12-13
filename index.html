@@ -164,6 +164,73 @@
         color: #67e8f9;
         min-height: 24px;
       }
+      .responsive {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .status-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 16px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .status-chip {
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+        color: #e2e8f0;
+        font-weight: 600;
+      }
+      .status-chip[data-state='pending'] {
+        border-color: rgba(34, 211, 238, 0.5);
+        color: #67e8f9;
+      }
+      .status-chip[data-state='ok'] {
+        border-color: rgba(74, 222, 128, 0.5);
+        color: #86efac;
+        background: rgba(34, 197, 94, 0.1);
+      }
+      .status-chip[data-state='error'] {
+        border-color: rgba(244, 114, 182, 0.6);
+        color: #f472b6;
+        background: rgba(244, 114, 182, 0.1);
+      }
+      .tabs {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+      }
+      .tab {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        color: #e2e8f0;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .tab.active {
+        border-color: #22d3ee;
+        color: #0b1220;
+        background: linear-gradient(135deg, #06b6d4, #22d3ee);
+      }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+      .admin-layout {
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+      }
       .diag-panel {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -233,10 +300,17 @@
         padding: 6px;
         border: 1px solid rgba(255, 255, 255, 0.08);
       }
-      .responsive {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+      details.collapsible {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0 12px 12px;
+        background: var(--card);
+      }
+      details.collapsible summary {
+        cursor: pointer;
+        padding: 12px 0;
+        font-weight: 700;
+        color: #e2e8f0;
       }
       @media (max-width: 960px) {
         .container {
@@ -245,6 +319,10 @@
         .diag-panel {
           grid-template-columns: 1fr;
         }
+        .status-bar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
       }
     </style>
   </head>
@@ -252,84 +330,120 @@
     <header>
       <h1>Neo4j Cypher 퀘스트</h1>
       <p class="subtitle">GitHub Pages용 한국어 Neo4j 미션 게임 · 연결 진단을 활용해 네트워크/CORS 문제를 바로 확인하세요.</p>
-      <div class="diag-panel">
-        <div class="diag-actions card">
-          <strong>연결 진단</strong>
-          <button id="btn-health" class="primary">헬스체크</button>
-          <button id="btn-return1">RETURN 1 테스트</button>
-          <button id="btn-seed">Seed 데이터 삽입</button>
-        </div>
-        <div class="card" style="min-height: 160px;">
-          <strong>결과 로그</strong>
-          <div id="diagnostic-log"></div>
-        </div>
-        <div class="card checklist">
-          <strong>자동 체크리스트</strong>
-          <table>
-            <tr><th>항목</th><th>상태</th><th>메모</th></tr>
-            <tr data-check="health"><td>/health 응답</td><td class="status">⚠️</td><td class="note">대기</td></tr>
-            <tr data-check="return1"><td>RETURN 1</td><td class="status">⚠️</td><td class="note">대기</td></tr>
-            <tr data-check="seed"><td>시드</td><td class="status">⚠️</td><td class="note">대기</td></tr>
-          </table>
-        </div>
-        <div class="card upload-card">
-          <strong>데이터 업로드</strong>
-          <p class="muted">내장 CSV로 초기화하거나, 직접 CSV를 올려 /import에 전송합니다.</p>
-          <button id="btn-load-bundled" class="primary">내장 CSV로 DB 채우기</button>
-          <div class="upload-grid">
-            <label class="upload-row">users.csv<input type="file" id="file-users" accept=".csv" /></label>
-            <label class="upload-row">items.csv<input type="file" id="file-items" accept=".csv" /></label>
-            <label class="upload-row">events.csv<input type="file" id="file-events" accept=".csv" /></label>
-          </div>
-          <button id="btn-upload-files">선택 CSV 업로드</button>
-          <p class="hint">FormData 그대로 전송하면 Content-Type 헤더를 직접 넣지 않아도 됩니다.</p>
-        </div>
-      </div>
     </header>
 
-    <main class="container">
-      <section class="card">
-        <h3>퀘스트 목록</h3>
-        <ul id="quest-list"></ul>
+    <main>
+      <div class="status-bar">
+        <span id="connection-status" class="status-chip" data-state="pending">연결 상태: 확인 중...</span>
+        <span id="tab-status">현재 보기: 퀘스트</span>
+      </div>
+
+      <div class="card tabs">
+        <button class="tab active" data-tab-target="quest">퀘스트</button>
+        <button class="tab" data-tab-target="explorer">탐색 (Explorer)</button>
+        <button class="tab" data-tab-target="admin">연결·데이터 관리</button>
+      </div>
+
+      <section class="tab-panel active" data-tab="quest">
+        <div class="container">
+          <section class="card">
+            <h3>퀘스트 목록</h3>
+            <ul id="quest-list"></ul>
+          </section>
+
+          <section class="card responsive">
+            <div>
+              <span class="badge" id="chapter-badge"></span>
+              <h2 id="quest-title"></h2>
+              <div class="detail-grid">
+                <div>
+                  <h4>스토리</h4>
+                  <p id="quest-story"></p>
+                </div>
+                <div>
+                  <h4>목표</h4>
+                  <p id="quest-goal"></p>
+                </div>
+                <div>
+                  <h4>제약</h4>
+                  <p id="quest-constraint"></p>
+                </div>
+                <div>
+                  <h4>힌트</h4>
+                  <p id="quest-hint"></p>
+                </div>
+              </div>
+              <div>
+                <h4>허용 연산</h4>
+                <div id="quest-allowed"></div>
+              </div>
+            </div>
+
+            <div>
+              <label for="cypher-input"><strong>Cypher 입력</strong></label>
+              <textarea id="cypher-input" placeholder="여기에 Cypher를 작성하세요"></textarea>
+              <div class="actions">
+                <button id="btn-run">실행만 하기</button>
+                <button id="btn-submit" class="primary">제출 및 채점</button>
+              </div>
+              <div id="feedback"></div>
+              <div id="result"></div>
+            </div>
+          </section>
+        </div>
       </section>
 
-      <section class="card responsive">
-        <div>
-          <span class="badge" id="chapter-badge"></span>
-          <h2 id="quest-title"></h2>
-          <div class="detail-grid">
-            <div>
-              <h4>스토리</h4>
-              <p id="quest-story"></p>
-            </div>
-            <div>
-              <h4>목표</h4>
-              <p id="quest-goal"></p>
-            </div>
-            <div>
-              <h4>제약</h4>
-              <p id="quest-constraint"></p>
-            </div>
-            <div>
-              <h4>힌트</h4>
-              <p id="quest-hint"></p>
-            </div>
-          </div>
-          <div>
-            <h4>허용 연산</h4>
-            <div id="quest-allowed"></div>
+      <section class="tab-panel" data-tab="explorer">
+        <div class="admin-layout">
+          <div class="card">
+            <h3>탐색 (Explorer)</h3>
+            <p class="subtitle">Cypher 결과를 자유롭게 탐색할 영역입니다. 필요한 쿼리를 작성 후 실행하거나, Neo4j Browser와 함께 활용하세요.</p>
+            <p class="subtitle">향후 그래프 시각화 등 탐색 기능을 여기에 추가할 수 있습니다.</p>
           </div>
         </div>
+      </section>
 
-        <div>
-          <label for="cypher-input"><strong>Cypher 입력</strong></label>
-          <textarea id="cypher-input" placeholder="여기에 Cypher를 작성하세요"></textarea>
-          <div class="actions">
-            <button id="btn-run">실행만 하기</button>
-            <button id="btn-submit" class="primary">제출 및 채점</button>
-          </div>
-          <div id="feedback"></div>
-          <div id="result"></div>
+      <section class="tab-panel" data-tab="admin">
+        <div class="admin-layout">
+          <details id="diagnostics-panel" class="collapsible">
+            <summary>연결 진단</summary>
+            <div class="diag-panel">
+              <div class="diag-actions card">
+                <strong>연결 진단</strong>
+                <button id="btn-health" class="primary">헬스체크</button>
+                <button id="btn-return1">RETURN 1 테스트</button>
+                <button id="btn-seed">Seed 데이터 삽입</button>
+              </div>
+              <div class="card" style="min-height: 160px;">
+                <strong>결과 로그</strong>
+                <div id="diagnostic-log"></div>
+              </div>
+              <div class="card checklist">
+                <strong>자동 체크리스트</strong>
+                <table>
+                  <tr><th>항목</th><th>상태</th><th>메모</th></tr>
+                  <tr data-check="health"><td>/health 응답</td><td class="status">⚠️</td><td class="note">대기</td></tr>
+                  <tr data-check="return1"><td>RETURN 1</td><td class="status">⚠️</td><td class="note">대기</td></tr>
+                  <tr data-check="seed"><td>시드</td><td class="status">⚠️</td><td class="note">대기</td></tr>
+                </table>
+              </div>
+            </div>
+          </details>
+
+          <details class="collapsible" open>
+            <summary>데이터 업로드</summary>
+            <div class="card upload-card">
+              <p class="muted">내장 CSV로 초기화하거나, 직접 CSV를 올려 /import에 전송합니다.</p>
+              <button id="btn-load-bundled" class="primary">내장 CSV로 DB 채우기</button>
+              <div class="upload-grid">
+                <label class="upload-row">users.csv<input type="file" id="file-users" accept=".csv" /></label>
+                <label class="upload-row">items.csv<input type="file" id="file-items" accept=".csv" /></label>
+                <label class="upload-row">events.csv<input type="file" id="file-events" accept=".csv" /></label>
+              </div>
+              <button id="btn-upload-files">선택 CSV 업로드</button>
+              <p class="hint">FormData 그대로 전송하면 Content-Type 헤더를 직접 넣지 않아도 됩니다.</p>
+            </div>
+          </details>
         </div>
       </section>
     </main>
