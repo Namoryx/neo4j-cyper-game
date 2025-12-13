@@ -1,7 +1,4 @@
-export const API_BASE =
-  (typeof window !== 'undefined' && window.API_BASE) ||
-  (typeof process !== 'undefined' && process.env?.API_BASE) ||
-  'https://neo4j-runner.neo4j-namoryx.workers.dev';
+export const API_BASE = window.API_BASE || 'https://neo4j-runner.neo4j-namoryx.workers.dev';
 export const RUN_URL = `${API_BASE}/run`;
 export const SUBMIT_URL = `${API_BASE}/submit`;
 export const SEED_URL = `${API_BASE}/seed`;
