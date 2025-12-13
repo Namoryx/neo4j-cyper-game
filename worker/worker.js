@@ -171,7 +171,7 @@ async function handleSubmit(request, env) {
 async function handleHealth(request, env) {
   try {
     await runReadQuery(env, 'RETURN 1 AS ok');
-    return jsonResponse({ ok: true, message: 'healthy' }, 200, request.headers.get('Origin'), env);
+    return jsonResponse({ ok: true, message: 'neo4j-runner ok' }, 200, request.headers.get('Origin'), env);
   } catch (error) {
     return jsonResponse({ ok: false, error: error.message }, 500, request.headers.get('Origin'), env);
   }
