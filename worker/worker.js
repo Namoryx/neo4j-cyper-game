@@ -13,7 +13,7 @@ const DEFAULT_ALLOWED = new Set([
   'http://localhost:5173',
 ]);
 
-const BLOCKED = /(CREATE|MERGE|DELETE|DETACH|SET|DROP|CALL|APOC)/i;
+const BLOCKED = /\b(CREATE|MERGE|DELETE|DETACH|SET|DROP|CALL|APOC|LOAD|REMOVE|FOREACH)\b/i;
 const MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB
 const MAX_ROWS = 5000;
 
@@ -202,6 +202,8 @@ function parseItemsCsv(csvText) {
     item_id: s(r.item_id || r.id),
     name: s(r.name),
     category: s(r.category),
+    brand: s(r.brand),
+    price: s(r.price),
   }));
 }
 
@@ -287,7 +289,10 @@ function parseCsv(text) {
 
 function normAction(v) {
   const a = s(v).toUpperCase();
-  return a === 'VIEW' || a === 'CART' || a === 'BUY' ? a : '';
+  if (a === 'VIEW' || a === 'VIEWED') return 'VIEWED';
+  if (a === 'CART' || a === 'ADDED_TO_CART' || a === 'ADD_TO_CART') return 'ADDED_TO_CART';
+  if (a === 'BUY' || a === 'PURCHASED' || a === 'PURCHASE') return 'PURCHASED';
+  return '';
 }
 
 function s(v) {
@@ -305,7 +310,9 @@ const CYPHER_ITEMS = `
 UNWIND $rows AS r
 MERGE (i:Item {id: r.item_id})
 SET i.name = r.name,
-    i.category = r.category
+    i.category = r.category,
+    i.brand = r.brand,
+    i.price = r.price
 RETURN count(*) AS upserted
 `;
 
@@ -313,20 +320,63 @@ const CYPHER_EVENTS = `
 UNWIND $rows AS r
 MATCH (u:User {id: r.user_id})
 MATCH (i:Item {id: r.item_id})
-FOREACH (_ IN CASE WHEN r.action = 'VIEW' THEN [1] ELSE [] END |
-  MERGE (u)-[rel:VIEW]->(i)
+FOREACH (_ IN CASE WHEN r.action = 'VIEWED' THEN [1] ELSE [] END |
+  MERGE (u)-[rel:VIEWED]->(i)
   SET rel.ts = r.ts
 )
-FOREACH (_ IN CASE WHEN r.action = 'CART' THEN [1] ELSE [] END |
-  MERGE (u)-[rel:CART]->(i)
+FOREACH (_ IN CASE WHEN r.action = 'ADDED_TO_CART' THEN [1] ELSE [] END |
+  MERGE (u)-[rel:ADDED_TO_CART]->(i)
   SET rel.ts = r.ts
 )
-FOREACH (_ IN CASE WHEN r.action = 'BUY' THEN [1] ELSE [] END |
-  MERGE (u)-[rel:BUY]->(i)
+FOREACH (_ IN CASE WHEN r.action = 'PURCHASED' THEN [1] ELSE [] END |
+  MERGE (u)-[rel:PURCHASED]->(i)
   SET rel.ts = r.ts
 )
 RETURN count(*) AS linked
 `;
+
+const DEFAULT_USERS = [
+  { user_id: 'u001', name: 'Alex' },
+  { user_id: 'u002', name: 'Bailey' },
+  { user_id: 'u003', name: 'Cameron' },
+  { user_id: 'u004', name: 'Dana' },
+  { user_id: 'u005', name: 'Elliot' },
+];
+
+const DEFAULT_ITEMS = [
+  { item_id: 'i001', name: 'Drift Home Item 01', category: 'home', brand: 'Drift', price: 162.74 },
+  { item_id: 'i002', name: 'Glide Beauty Item 02', category: 'beauty', brand: 'Glide', price: 14.05 },
+  { item_id: 'i003', name: 'Beacon Sports Item 03', category: 'sports', brand: 'Beacon', price: 74.56 },
+  { item_id: 'i004', name: 'Ember Books Item 04', category: 'books', brand: 'Ember', price: 62.02 },
+  { item_id: 'i005', name: 'Flare Fashion Item 05', category: 'fashion', brand: 'Flare', price: 182.13 },
+];
+
+const DEFAULT_EVENTS = [
+  { user_id: 'u001', item_id: 'i001', action: 'VIEWED', ts: Date.parse('2023-11-14T00:00:00Z') },
+  { user_id: 'u001', item_id: 'i001', action: 'ADDED_TO_CART', ts: Date.parse('2023-11-14T00:05:00Z') },
+  { user_id: 'u001', item_id: 'i001', action: 'PURCHASED', ts: Date.parse('2023-11-14T00:10:00Z') },
+  { user_id: 'u002', item_id: 'i002', action: 'VIEWED', ts: Date.parse('2023-11-14T01:00:00Z') },
+  { user_id: 'u002', item_id: 'i003', action: 'VIEWED', ts: Date.parse('2023-11-14T02:00:00Z') },
+  { user_id: 'u003', item_id: 'i004', action: 'VIEWED', ts: Date.parse('2023-11-14T03:00:00Z') },
+  { user_id: 'u004', item_id: 'i005', action: 'VIEWED', ts: Date.parse('2023-11-14T04:00:00Z') },
+  { user_id: 'u005', item_id: 'i003', action: 'ADDED_TO_CART', ts: Date.parse('2023-11-14T05:00:00Z') },
+];
+
+async function seedDefaults(env) {
+  const results = [];
+  results.push(await runNeo4j(env, CYPHER_USERS, { rows: DEFAULT_USERS }));
+  results.push(await runNeo4j(env, CYPHER_ITEMS, { rows: DEFAULT_ITEMS }));
+  results.push(await runNeo4j(env, CYPHER_EVENTS, { rows: DEFAULT_EVENTS }));
+
+  const ok = results.every((r) => r?.ok);
+  const counts = {
+    users: DEFAULT_USERS.length,
+    items: DEFAULT_ITEMS.length,
+    events: DEFAULT_EVENTS.length,
+  };
+
+  return { ok, results, counts };
+}
 
 async function handleOptions(req) {
   return new Response(null, { status: 204, headers: cors(req, req.env) });
@@ -337,37 +387,24 @@ async function handleHealth(req) {
 }
 
 async function handleSeed(req, env) {
-  const seedCypher = `
-    MERGE (u1:User {id:'u1'}) SET u1.name='Alice'
-    MERGE (u2:User {id:'u2'}) SET u2.name='Bob'
-    MERGE (u3:User {id:'u3'}) SET u3.name='Chris'
-
-    MERGE (i1:Item {id:'i1'}) SET i1.name='Graph DB Book', i1.category='book'
-    MERGE (i2:Item {id:'i2'}) SET i2.name='Neo4j Mug', i2.category='goods'
-    MERGE (i3:Item {id:'i3'}) SET i3.name='Cypher Cheat Sheet', i3.category='doc'
-    MERGE (i4:Item {id:'i4'}) SET i4.name='Bouldering Chalk', i4.category='sport'
-
-    WITH 1 as _
-    MATCH (u1:User {id:'u1'}), (u2:User {id:'u2'}), (u3:User {id:'u3'})
-    MATCH (i1:Item {id:'i1'}), (i2:Item {id:'i2'}), (i3:Item {id:'i3'}), (i4:Item {id:'i4'})
-
-    MERGE (u1)-[:VIEW]->(i1)
-    MERGE (u1)-[:CART]->(i2)
-    MERGE (u2)-[:VIEW]->(i1)
-    MERGE (u2)-[:BUY]->(i1)
-    MERGE (u3)-[:VIEW]->(i2)
-    MERGE (u3)-[:VIEW]->(i3)
-    MERGE (u3)-[:VIEW]->(i4)
-
-    RETURN 1 AS seeded
-  `;
-
-  const result = await runNeo4j(env, seedCypher, {});
-  const status = result.ok ? 200 : 500;
-  return json(req, result, status);
+  const seeded = await seedDefaults(env);
+  const status = seeded.ok ? 200 : 500;
+  return json(
+    req,
+    {
+      ok: seeded.ok,
+      seeded: seeded.ok,
+      counts: seeded.counts,
+      results: seeded.results,
+    },
+    status
+  );
 }
 
 async function handleRun(req, env) {
+  if (req.method !== 'POST') {
+    return json(req, { ok: false, error: 'Method Not Allowed', method: req.method }, 405);
+  }
   const body = await req.json().catch(() => ({}));
   let cypher = String(body?.cypher ?? '').trim();
   const params = body?.params ?? {};
@@ -385,6 +422,9 @@ async function handleRun(req, env) {
 }
 
 async function handleSubmit(req, env) {
+  if (req.method !== 'POST') {
+    return json(req, { ok: false, error: 'Method Not Allowed', method: req.method }, 405);
+  }
   const body = await req.json().catch(() => ({}));
   let cypher = String(body?.cypher ?? '').trim();
   const questId = body?.questId;
@@ -405,6 +445,57 @@ async function handleReset(req, env) {
   const result = await runNeo4j(env, 'MATCH (n) DETACH DELETE n');
   const status = result.ok ? 200 : 500;
   return json(req, result, status);
+}
+
+async function handleResetAndSeed(req, env) {
+  if (req.method !== 'POST') {
+    return json(req, { ok: false, error: 'Method Not Allowed', method: req.method }, 405);
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const confirm = Boolean(body?.confirm);
+
+  const existing = await runNeo4j(env, 'MATCH (n) RETURN count(n) AS nodes');
+  if (!existing.ok) {
+    return json(req, existing, 500);
+  }
+
+  const nodes = existing.records?.[0]?.nodes ?? 0;
+  if (nodes > 0 && !confirm) {
+    return json(
+      req,
+      {
+        ok: false,
+        error: 'Database not empty. Pass {"confirm": true} to reset and reseed.',
+        nodes,
+        seeded: false,
+      },
+      400
+    );
+  }
+
+  const actions = [];
+  if (nodes > 0) {
+    const wiped = await runNeo4j(env, 'MATCH (n) DETACH DELETE n');
+    actions.push({ step: 'reset', ...wiped });
+    if (!wiped.ok) return json(req, wiped, 500);
+  }
+
+  const seeded = await seedDefaults(env);
+  actions.push({ step: 'seed', ...seeded });
+  const status = seeded.ok ? 200 : 500;
+
+  return json(
+    req,
+    {
+      ok: seeded.ok,
+      seeded: seeded.ok,
+      counts: seeded.counts,
+      nodesBefore: nodes,
+      actions,
+    },
+    status
+  );
 }
 
 async function handleImport(req, env) {
@@ -464,7 +555,13 @@ async function handleImport(req, env) {
     .filter((r) => r.user_id);
 
   items = items
-    .map((r) => ({ item_id: s(r.item_id || r.id), name: s(r.name), category: s(r.category) }))
+    .map((r) => ({
+      item_id: s(r.item_id || r.id),
+      name: s(r.name),
+      category: s(r.category),
+      brand: s(r.brand),
+      price: Number.isFinite(parseFloat(r.price)) ? parseFloat(r.price) : null,
+    }))
     .filter((r) => r.item_id);
 
   const now = Date.now();
@@ -503,6 +600,7 @@ export default {
       if (url.pathname === '/submit' && req.method === 'POST') return handleSubmit(req, env);
       if (url.pathname === '/seed' && req.method === 'POST') return handleSeed(req, env);
       if (url.pathname === '/reset' && req.method === 'POST') return handleReset(req, env);
+      if (url.pathname === '/reset-seed') return handleResetAndSeed(req, env);
       if (url.pathname === '/import') return handleImport(req, env);
       return json(req, { ok: false, error: 'Not Found', path: url.pathname }, 404);
     } catch (e) {
