@@ -33,7 +33,7 @@ async function runHealthCheck() {
   try {
     const result = await apiFetch(HEALTH_URL, { method: 'GET' });
     addLog(`헬스체크 성공: ${JSON.stringify(result)}`);
-    updateChecklistItem('health', true, '200 OK');
+    updateChecklistItem('health', true, result.message || '200 OK');
   } catch (error) {
     addLog(error.message, 'error');
     updateChecklistItem('health', false, '오류');

@@ -166,7 +166,7 @@
       }
       .diag-panel {
         display: grid;
-        grid-template-columns: 220px 1fr 220px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 12px;
         align-items: start;
         margin-top: 12px;
@@ -174,6 +174,35 @@
       .diag-actions button {
         width: 100%;
         margin-bottom: 6px;
+      }
+      .upload-card .muted {
+        color: var(--muted);
+        margin: 4px 0 10px;
+        font-size: 13px;
+      }
+      .upload-grid {
+        display: grid;
+        gap: 8px;
+        margin: 6px 0 10px;
+      }
+      .upload-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 14px;
+      }
+      .upload-row input[type='file'] {
+        flex: 1;
+      }
+      .upload-card button {
+        width: 100%;
+        margin-top: 4px;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 12px;
+        margin: 6px 0 0;
       }
       #diagnostic-log {
         background: #0a1221;
@@ -242,6 +271,18 @@
             <tr data-check="return1"><td>RETURN 1</td><td class="status">⚠️</td><td class="note">대기</td></tr>
             <tr data-check="seed"><td>시드</td><td class="status">⚠️</td><td class="note">대기</td></tr>
           </table>
+        </div>
+        <div class="card upload-card">
+          <strong>데이터 업로드</strong>
+          <p class="muted">내장 CSV로 초기화하거나, 직접 CSV를 올려 /import에 전송합니다.</p>
+          <button id="btn-load-bundled" class="primary">내장 CSV로 DB 채우기</button>
+          <div class="upload-grid">
+            <label class="upload-row">users.csv<input type="file" id="file-users" accept=".csv" /></label>
+            <label class="upload-row">items.csv<input type="file" id="file-items" accept=".csv" /></label>
+            <label class="upload-row">events.csv<input type="file" id="file-events" accept=".csv" /></label>
+          </div>
+          <button id="btn-upload-files">선택 CSV 업로드</button>
+          <p class="hint">FormData 그대로 전송하면 Content-Type 헤더를 직접 넣지 않아도 됩니다.</p>
         </div>
       </div>
     </header>

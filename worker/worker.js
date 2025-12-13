@@ -3,6 +3,7 @@
 // - Read-only enforcement on /run and /submit
 // - HTTP(S) data API call (no Bolt driver) for Cloudflare compatibility
 // - Seed/reset helpers for diagnosing connectivity
+// - CSV/JSON import endpoint for uploading users/items/events
 
 const DEFAULT_ALLOWED = new Set([
   'https://namoryx.github.io',
@@ -13,6 +14,8 @@ const DEFAULT_ALLOWED = new Set([
 ]);
 
 const BLOCKED = /(CREATE|MERGE|DELETE|DETACH|SET|DROP|CALL|APOC)/i;
+const MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB
+const MAX_ROWS = 5000;
 
 function allowedOrigins(env) {
   const raw = env?.ALLOWED_ORIGINS;
@@ -170,12 +173,167 @@ async function runNeo4j(env, cypher, params = {}) {
   };
 }
 
+async function enforceBodyLimit(req) {
+  const cl = req.headers.get('content-length');
+  if (cl && +cl > MAX_BODY_BYTES) throw new Error(`Body too large: ${cl} > ${MAX_BODY_BYTES}`);
+}
+
+async function readFieldAsText(fd, fileFieldName, textFieldName) {
+  const file = fd.get(fileFieldName);
+  if (file && typeof file === 'object' && 'text' in file) {
+    return await file.text();
+  }
+  const t = fd.get(textFieldName);
+  if (typeof t === 'string') return t;
+  return '';
+}
+
+function parseUsersCsv(csvText) {
+  const rows = parseCsvObjects(csvText);
+  return rows.map((r) => ({
+    user_id: s(r.user_id || r.id),
+    name: s(r.name),
+  }));
+}
+
+function parseItemsCsv(csvText) {
+  const rows = parseCsvObjects(csvText);
+  return rows.map((r) => ({
+    item_id: s(r.item_id || r.id),
+    name: s(r.name),
+    category: s(r.category),
+  }));
+}
+
+function parseEventsCsv(csvText) {
+  const rows = parseCsvObjects(csvText);
+  return rows.map((r) => ({
+    user_id: s(r.user_id),
+    item_id: s(r.item_id),
+    action: s(r.action),
+    ts: s(r.ts || r.timestamp),
+  }));
+}
+
+function parseCsvObjects(text) {
+  const { header, records } = parseCsv(text);
+  return records.map((cols) => {
+    const obj = {};
+    for (let i = 0; i < header.length; i++) obj[header[i]] = cols[i] ?? '';
+    return obj;
+  });
+}
+
+function parseCsv(text) {
+  const sText = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!sText) return { header: [], records: [] };
+
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < sText.length; i++) {
+    const ch = sText[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        const next = sText[i + 1];
+        if (next === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += ch;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inQuotes = true;
+      continue;
+    }
+
+    if (ch === ',') {
+      row.push(field);
+      field = '';
+      continue;
+    }
+
+    if (ch === '\n') {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+      continue;
+    }
+
+    field += ch;
+  }
+
+  row.push(field);
+  rows.push(row);
+
+  const header = (rows[0] || []).map((h) => String(h).trim());
+  const records = rows
+    .slice(1)
+    .map((r) => r.map((c) => String(c ?? '').trim()))
+    .filter((r) => r.some((x) => x !== ''));
+
+  return { header, records };
+}
+
+function normAction(v) {
+  const a = s(v).toUpperCase();
+  return a === 'VIEW' || a === 'CART' || a === 'BUY' ? a : '';
+}
+
+function s(v) {
+  return v == null ? '' : String(v);
+}
+
+const CYPHER_USERS = `
+UNWIND $rows AS r
+MERGE (u:User {id: r.user_id})
+SET u.name = r.name
+RETURN count(*) AS upserted
+`;
+
+const CYPHER_ITEMS = `
+UNWIND $rows AS r
+MERGE (i:Item {id: r.item_id})
+SET i.name = r.name,
+    i.category = r.category
+RETURN count(*) AS upserted
+`;
+
+const CYPHER_EVENTS = `
+UNWIND $rows AS r
+MATCH (u:User {id: r.user_id})
+MATCH (i:Item {id: r.item_id})
+FOREACH (_ IN CASE WHEN r.action = 'VIEW' THEN [1] ELSE [] END |
+  MERGE (u)-[rel:VIEW]->(i)
+  SET rel.ts = r.ts
+)
+FOREACH (_ IN CASE WHEN r.action = 'CART' THEN [1] ELSE [] END |
+  MERGE (u)-[rel:CART]->(i)
+  SET rel.ts = r.ts
+)
+FOREACH (_ IN CASE WHEN r.action = 'BUY' THEN [1] ELSE [] END |
+  MERGE (u)-[rel:BUY]->(i)
+  SET rel.ts = r.ts
+)
+RETURN count(*) AS linked
+`;
+
 async function handleOptions(req) {
   return new Response(null, { status: 204, headers: cors(req, req.env) });
 }
 
-async function handleHealth(req, env) {
-  return text(req, 'neo4j-runner ok', 200);
+async function handleHealth(req) {
+  return json(req, { ok: true, message: 'neo4j-runner ok' }, 200);
 }
 
 async function handleSeed(req, env) {
@@ -249,6 +407,89 @@ async function handleReset(req, env) {
   return json(req, result, status);
 }
 
+async function handleImport(req, env) {
+  if (req.method !== 'POST') {
+    return json(req, { ok: false, error: 'Method Not Allowed', method: req.method }, 405);
+  }
+
+  await enforceBodyLimit(req);
+
+  const ct = (req.headers.get('content-type') || '').toLowerCase();
+  let users = [];
+  let items = [];
+  let events = [];
+
+  if (ct.includes('multipart/form-data')) {
+    const fd = await req.formData();
+    const usersText = await readFieldAsText(fd, 'users', 'usersCsv');
+    const itemsText = await readFieldAsText(fd, 'items', 'itemsCsv');
+    const eventsText = await readFieldAsText(fd, 'events', 'eventsCsv');
+
+    if (usersText) users = parseUsersCsv(usersText);
+    if (itemsText) items = parseItemsCsv(itemsText);
+    if (eventsText) events = parseEventsCsv(eventsText);
+  } else if (ct.includes('application/json')) {
+    const body = await req.json().catch(() => ({}));
+    users = Array.isArray(body.users) ? body.users : [];
+    items = Array.isArray(body.items) ? body.items : [];
+    events = Array.isArray(body.events) ? body.events : [];
+  } else {
+    return json(
+      req,
+      {
+        ok: false,
+        error: 'Unsupported Content-Type',
+        hint: 'Use multipart/form-data (recommended) or application/json',
+        got: ct,
+      },
+      415
+    );
+  }
+
+  if (users.length > MAX_ROWS || items.length > MAX_ROWS || events.length > MAX_ROWS) {
+    return json(
+      req,
+      {
+        ok: false,
+        error: 'Too many rows',
+        limits: { MAX_ROWS, MAX_BODY_BYTES },
+        counts: { users: users.length, items: items.length, events: events.length },
+      },
+      413
+    );
+  }
+
+  users = users
+    .map((r) => ({ user_id: s(r.user_id || r.id), name: s(r.name) }))
+    .filter((r) => r.user_id);
+
+  items = items
+    .map((r) => ({ item_id: s(r.item_id || r.id), name: s(r.name), category: s(r.category) }))
+    .filter((r) => r.item_id);
+
+  const now = Date.now();
+  events = events
+    .map((r) => ({
+      user_id: s(r.user_id),
+      item_id: s(r.item_id),
+      action: normAction(r.action),
+      ts: Number.isFinite(+r.ts) ? +r.ts : now,
+    }))
+    .filter((r) => r.user_id && r.item_id && r.action);
+
+  const results = [];
+  if (users.length) results.push(await runNeo4j(env, CYPHER_USERS, { rows: users }));
+  if (items.length) results.push(await runNeo4j(env, CYPHER_ITEMS, { rows: items }));
+  if (events.length) results.push(await runNeo4j(env, CYPHER_EVENTS, { rows: events }));
+
+  return json(req, {
+    ok: true,
+    imported: true,
+    counts: { users: users.length, items: items.length, events: events.length },
+    results,
+  });
+}
+
 export default {
   async fetch(req, env) {
     req.env = env; // attach for helpers
@@ -262,6 +503,7 @@ export default {
       if (url.pathname === '/submit' && req.method === 'POST') return handleSubmit(req, env);
       if (url.pathname === '/seed' && req.method === 'POST') return handleSeed(req, env);
       if (url.pathname === '/reset' && req.method === 'POST') return handleReset(req, env);
+      if (url.pathname === '/import') return handleImport(req, env);
       return json(req, { ok: false, error: 'Not Found', path: url.pathname }, 404);
     } catch (e) {
       return json(req, { ok: false, error: 'Worker exception', detail: String(e) }, 500);

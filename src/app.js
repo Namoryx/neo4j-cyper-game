@@ -2,6 +2,7 @@ import { quests } from './quests.js';
 import { runQuery, submitSolution } from './checker.js';
 import { loadProgress, saveProgress } from './storage.js';
 import { initDiagnostics } from './diagnostics.js';
+import { initImporter } from './importer.js';
 
 const questList = document.querySelector('#quest-list');
 const questTitle = document.querySelector('#quest-title');
@@ -131,6 +132,7 @@ function wireEvents() {
 
 function main() {
   initDiagnostics();
+  initImporter();
   renderQuestList();
   renderQuestDetail();
   wireEvents();

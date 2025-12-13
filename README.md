@@ -75,6 +75,7 @@
 - `src/storage.js`: 로컬 진행도 저장
 - `worker/worker.js`: Cloudflare Worker, AuraDB 연결, CORS/OPTIONS 처리, READ/WRITE 제한, LIMIT 강제, 위험 쿼리 차단, 시드 삽입
 - `worker/wrangler.toml`: Worker 설정 템플릿
+- `data/*.csv`: 내장 업로드용 기본 users/items/events CSV 샘플
 
 ## 테스트
 
@@ -98,7 +99,7 @@
 
     200 응답으로 `{"ok":true,...,"data":[[{"ok":1}]]}` 형태가 오면 AuraDB/Worker가 정상 동작합니다. (CORS가 막히면 브라우저 콘솔에서 Blocked by CORS 에러가 발생하니, `ALLOWED_ORIGINS`에 호출 Origin이 포함됐는지 확인하세요.)
 
-  - READ 쿼리 실행(PowerShell 예시):
+ - READ 쿼리 실행(PowerShell 예시):
 
     ```powershell
     $uri = "https://neo4j-runner.neo4j-namoryx.workers.dev/run"
@@ -107,3 +108,8 @@
     ```
 
     AuraDB 자격 증명은 Worker 시크릿(NEO4J_USER/NEO4J_PASSWORD)으로 주입되므로 클라이언트는 별도 인증 없이 호출할 수 있습니다.
+
+- **CSV 업로드(/import)**
+  - 헤더는 `users.csv: user_id,name`, `items.csv: item_id,name,category`, `events.csv: user_id,item_id,action,ts`(action=VIEW/CART/BUY) 형식입니다.
+  - 브라우저에서 FormData로 전송할 때는 `Content-Type`을 직접 넣지 말고 `body: formData`만 지정하세요.
+  - GitHub Pages 헤더 카드에 **내장 CSV로 DB 채우기** 버튼과 사용자가 직접 올리는 업로드 폼이 포함되어 있습니다.

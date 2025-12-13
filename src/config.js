@@ -3,6 +3,7 @@ export const RUN_URL = `${API_BASE}/run`;
 export const SUBMIT_URL = `${API_BASE}/submit`;
 export const SEED_URL = `${API_BASE}/seed`;
 export const HEALTH_URL = `${API_BASE}/health`;
+export const IMPORT_URL = `${API_BASE}/import`;
 
 export async function apiFetch(url, options = {}) {
   const merged = {
