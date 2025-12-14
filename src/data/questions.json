@@ -289,5 +289,18 @@
     "explanation": "MERGE를 사용해 존재 여부와 상관없이 동일한 노드 참조를 확보합니다.",
     "expected": [],
     "ordered": false
+  },
+  {
+    "id": "cypher-003",
+    "type": "cypher",
+    "difficulty": "hard",
+    "question": "두 도시 사이의 최단 경로를 찾는 쿼리를 작성하고, 총 거리를 반환하세요.",
+    "hint": [
+      "p = shortestPath(...) 형태를 떠올려 보세요",
+      "경로의 관계 속성 distance를 합산해야 합니다"
+    ],
+    "explanation": "shortestPath로 경로를 찾고 reduce로 거리를 합산하는 문제입니다.",
+    "expected": [],
+    "ordered": true
   }
 ]
