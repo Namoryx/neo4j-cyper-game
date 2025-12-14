@@ -1,16 +1,12 @@
-import { useState } from 'react';
-
-function McqOptions({ options = [] }) {
-  const [selected, setSelected] = useState(null);
-
+function McqOptions({ options = [], selectedOption, setSelectedOption }) {
   return (
     <div className="options">
-      {options.map((option, index) => (
+      {options.map((option) => (
         <button
           key={option}
           type="button"
-          className={`option-button${selected === index ? ' selected' : ''}`}
-          onClick={() => setSelected(index)}
+          className={`option-button${selectedOption === option ? ' selected' : ''}`}
+          onClick={() => setSelectedOption(option)}
         >
           {option}
         </button>
