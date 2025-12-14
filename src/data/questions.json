@@ -3,8 +3,13 @@
     "id": "mcq-001",
     "type": "mcq",
     "difficulty": "easy",
+    "domain": "general",
+    "concepts": ["pattern", "direction"],
     "question": "다음 MATCH 패턴에서 방향성이 의미하는 것은 무엇인가요?",
-    "hint": ["화살표는 관계의 방향을 나타냅니다", "정점과 관계의 레이블을 읽어보세요"],
+    "hint": [
+      "화살표는 관계의 방향을 나타냅니다",
+      "정점과 관계의 레이블을 읽어보세요"
+    ],
     "explanation": "Cypher에서 -> 화살표는 관계의 방향을 의미합니다.",
     "options": [
       "왼쪽 노드에서 오른쪽 노드로 향하는 관계",
@@ -14,13 +19,275 @@
     "answer": "왼쪽 노드에서 오른쪽 노드로 향하는 관계"
   },
   {
+    "id": "mcq-002",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "general",
+    "concepts": ["index", "performance"],
+    "question": "Neo4j에서 특정 레이블의 노드가 존재하는지 가장 빠르게 확인하려면 어떤 인덱스를 사용하나요?",
+    "hint": [
+      "레이블과 속성 조합을 생각해 보세요",
+      "노드 존재 여부를 빠르게 확인하는 용도입니다"
+    ],
+    "explanation": "단일 속성에 대한 레이블 인덱스가 존재 여부 확인에 적합합니다.",
+    "options": [
+      "풀텍스트 인덱스",
+      "BTREE 기반 레이블 인덱스",
+      "시스템 카탈로그 조회"
+    ],
+    "answer": "BTREE 기반 레이블 인덱스"
+  },
+  {
+    "id": "mcq-003",
+    "type": "mcq",
+    "difficulty": "hard",
+    "domain": "general",
+    "concepts": ["path", "variable-length"],
+    "question": "경로 길이를 변수로 지정하는 MATCH (a)-[r:KNOWS*1..3]->(b)에서 *1..3은 무엇을 의미하나요?",
+    "hint": [
+      "반복된 관계의 최소/최대 길이를 의미합니다",
+      "가변 길이 패턴의 기본 문법을 떠올려 보세요"
+    ],
+    "explanation": "*1..3은 관계가 1~3번 반복될 수 있는 가변 길이 경로를 의미합니다.",
+    "options": [
+      "최소 1개, 최대 3개의 관계로 이어진 경로",
+      "정확히 3개의 관계로 이어진 경로",
+      "경로 길이에 제한이 없는 패턴"
+    ],
+    "answer": "최소 1개, 최대 3개의 관계로 이어진 경로"
+  },
+  {
     "id": "cypher-001",
     "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "concepts": ["return", "scalar"],
+    "question": "\"RETURN 1 AS one\" 결과를 반환하는 Cypher를 입력하세요.",
+    "hint": [
+      "RETURN 1 AS one 을 그대로 입력해 보세요",
+      "컬럼명 one이 결과에 포함되어야 합니다"
+    ],
+    "explanation": "기본 반환문을 입력하는 연습 문제입니다.",
+    "expected": ["1"],
+    "ordered": true
+  },
+  {
+    "id": "cypher-002",
+    "type": "cypher",
     "difficulty": "medium",
+    "domain": "social",
+    "concepts": ["pattern", "filter", "aggregation"],
     "question": "특정 사용자 U1과 공통 친구를 가진 모든 사용자의 이름을 조회하는 쿼리를 작성하세요.",
-    "hint": ["MATCH 절에서 동일한 이웃을 공유하는 패턴을 찾아보세요", "본인 노드는 결과에서 제외합니다"],
+    "hint": [
+      "MATCH 절에서 동일한 이웃을 공유하는 패턴을 찾아보세요",
+      "본인 노드는 결과에서 제외합니다"
+    ],
     "explanation": "공통 이웃을 찾은 뒤 자기 자신은 제외하고 이름을 반환하는 문제입니다.",
-    "expected": ["Alex", "Jamie"],
+    "expected": [],
+    "ordered": false
+  },
+  {
+    "id": "cypher-003",
+    "type": "cypher",
+    "difficulty": "hard",
+    "domain": "travel",
+    "concepts": ["path", "shortest-path", "aggregation"],
+    "question": "두 도시 사이의 최단 경로를 찾는 쿼리를 작성하고, 총 거리를 반환하세요.",
+    "hint": [
+      "p = shortestPath(...) 형태를 떠올려 보세요",
+      "경로의 관계 속성 distance를 합산해야 합니다"
+    ],
+    "explanation": "shortestPath로 경로를 찾고 reduce로 거리를 합산하는 문제입니다.",
+    "expected": [],
+    "ordered": true
+  },
+  {
+    "id": "mcq-004",
+    "type": "mcq",
+    "difficulty": "easy",
+    "domain": "shopping",
+    "concepts": ["filter", "match"],
+    "question": "상품 노드(Product)에서 가격이 100 이상인 상품을 찾으려면 WHERE 절에 어떤 비교 연산을 사용하나요?",
+    "hint": [
+      ">= 연산을 떠올려 보세요",
+      "숫자 비교는 정수/실수를 그대로 비교합니다"
+    ],
+    "explanation": "가격이 특정 값 이상인 조건은 WHERE price >= 100 형태로 작성합니다.",
+    "options": [
+      "price >= 100",
+      "price => 100",
+      "price <> 100"
+    ],
+    "answer": "price >= 100"
+  },
+  {
+    "id": "mcq-005",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "shopping",
+    "concepts": ["aggregation", "order"],
+    "question": "장바구니 총액을 계산할 때 SUM을 사용한다면, 결과를 높은 금액 순으로 정렬하려면 어떤 절을 추가해야 하나요?",
+    "hint": [
+      "집계 결과는 ORDER BY로 정렬합니다",
+      "내림차순은 DESC 키워드를 사용합니다"
+    ],
+    "explanation": "SUM으로 합산한 뒤 ORDER BY total DESC 형태로 정렬합니다.",
+    "options": [
+      "ORDER BY total DESC",
+      "SORT BY total ASC",
+      "GROUP BY total DESC"
+    ],
+    "answer": "ORDER BY total DESC"
+  },
+  {
+    "id": "mcq-006",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "general",
+    "concepts": ["update", "merge"],
+    "question": "MERGE (u:User {id: $id}) ON CREATE SET u.createdAt = timestamp() ON MATCH SET u.lastSeen = timestamp() 는 어떤 동작을 하나요?",
+    "hint": [
+      "존재하면 갱신, 없으면 생성",
+      "MERGE는 UPSERT 같은 역할입니다"
+    ],
+    "explanation": "MERGE는 노드를 찾아보고 없으면 생성, 있으면 ON MATCH 절을 실행합니다.",
+    "options": [
+      "항상 새 User 노드를 생성한다",
+      "존재하면 lastSeen을, 없으면 createdAt을 설정한다",
+      "아무 동작도 하지 않는다"
+    ],
+    "answer": "존재하면 lastSeen을, 없으면 createdAt을 설정한다"
+  },
+  {
+    "id": "cypher-004",
+    "type": "cypher",
+    "difficulty": "easy",
+    "domain": "shopping",
+    "concepts": ["filter", "return"],
+    "question": "가격이 50 미만인 상품 이름을 모두 반환하는 쿼리를 작성하세요.",
+    "hint": [
+      "MATCH (p:Product) WHERE p.price < 50 RETURN p.name",
+      "간단한 비교 연산을 사용합니다"
+    ],
+    "explanation": "가격 조건을 WHERE로 걸고 이름을 반환하면 됩니다.",
+    "expected": [],
+    "ordered": false
+  },
+  {
+    "id": "cypher-005",
+    "type": "cypher",
+    "difficulty": "medium",
+    "domain": "social",
+    "concepts": ["path", "exclude"],
+    "question": "사용자 U1과 직접 친구가 아닌 친구의 친구를 찾는 쿼리를 작성하세요.",
+    "hint": [
+      "두 번의 KNOWS 관계를 탐색한 뒤 NOT EXISTS로 직접 친구를 제외하세요",
+      "DISTINCT를 사용해 중복을 없앨 수 있습니다"
+    ],
+    "explanation": "가변 길이 혹은 두 단계 패턴으로 연결 후 필터링하는 문제입니다.",
+    "expected": [],
+    "ordered": false
+  },
+  {
+    "id": "mcq-007",
+    "type": "mcq",
+    "difficulty": "hard",
+    "domain": "knowledge",
+    "concepts": ["graph-model", "labels"],
+    "question": "지식 그래프에서 동일한 엔티티에 여러 레이블을 부여하는 이유는 무엇인가요?",
+    "hint": [
+      "검색 및 인덱싱을 유연하게 만들기 위해",
+      "엔티티의 다양한 역할을 표현할 수 있습니다"
+    ],
+    "explanation": "다중 레이블은 검색 최적화와 다중 역할 표현 모두에 도움이 됩니다.",
+    "options": [
+      "엔티티를 중복 생성하지 않기 위해",
+      "다양한 카테고리나 역할을 함께 표현하고 인덱싱 유연성을 높이기 위해",
+      "쿼리 속도를 느리게 만들기 위해"
+    ],
+    "answer": "다양한 카테고리나 역할을 함께 표현하고 인덱싱 유연성을 높이기 위해"
+  },
+  {
+    "id": "mcq-008",
+    "type": "mcq",
+    "difficulty": "easy",
+    "domain": "general",
+    "concepts": ["return", "alias"],
+    "question": "RETURN a.name AS userName 과 같은 구문에서 AS의 역할은 무엇인가요?",
+    "hint": [
+      "AS는 별칭을 지정합니다",
+      "컬럼명을 읽기 쉽게 바꿀 때 사용합니다"
+    ],
+    "explanation": "AS는 반환 컬럼의 별칭을 지정합니다.",
+    "options": [
+      "새 노드를 생성한다",
+      "반환 컬럼 이름을 userName으로 지정한다",
+      "쿼리를 종료한다"
+    ],
+    "answer": "반환 컬럼 이름을 userName으로 지정한다"
+  },
+  {
+    "id": "cypher-006",
+    "type": "cypher",
+    "difficulty": "medium",
+    "domain": "shopping",
+    "concepts": ["aggregation", "group"],
+    "question": "카테고리별 상품 수를 세어 카테고리 이름과 함께 반환하는 쿼리를 작성하세요.",
+    "hint": [
+      "MATCH (p:Product) RETURN p.category AS category, count(*) AS cnt",
+      "집계에는 GROUP BY 대신 RETURN에서 컬럼을 함께 적습니다"
+    ],
+    "explanation": "카테고리별로 그룹화해 count(*)를 반환하는 기본 집계 패턴입니다.",
+    "expected": [],
+    "ordered": false
+  },
+  {
+    "id": "cypher-007",
+    "type": "cypher",
+    "difficulty": "hard",
+    "domain": "general",
+    "concepts": ["ranking", "order"],
+    "question": "사용자들의 포인트를 기준으로 상위 3명을 조회하는 쿼리를 작성하세요.",
+    "hint": [
+      "ORDER BY 포인트 DESC LIMIT 3",
+      "MATCH (u:User) RETURN u.name, u.points ORDER BY u.points DESC LIMIT 3"
+    ],
+    "explanation": "정렬 후 LIMIT으로 상위 N을 자르는 랭킹 기본 문제입니다.",
+    "expected": [],
+    "ordered": true
+  },
+  {
+    "id": "mcq-009",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "social",
+    "concepts": ["filter", "distinct"],
+    "question": "중복된 관계 결과를 제거하려면 어떤 키워드를 사용하나요?",
+    "hint": [
+      "SQL과 비슷한 키워드",
+      "반환 컬럼 앞에 위치합니다"
+    ],
+    "explanation": "DISTINCT는 중복 행을 제거하는 키워드입니다.",
+    "options": [
+      "UNIQUE",
+      "DISTINCT",
+      "REMOVE"
+    ],
+    "answer": "DISTINCT"
+  },
+  {
+    "id": "cypher-008",
+    "type": "cypher",
+    "difficulty": "medium",
+    "domain": "knowledge",
+    "concepts": ["merge", "upsert"],
+    "question": "지식 그래프에서 특정 엔티티 이름이 없으면 생성하고 있으면 조회된 노드를 반환하는 MERGE 쿼리를 작성하세요.",
+    "hint": [
+      "MERGE (e:Entity {name: $name}) RETURN e",
+      "ON CREATE/ON MATCH 절로 추가 속성을 설정할 수 있습니다"
+    ],
+    "explanation": "MERGE를 사용해 존재 여부와 상관없이 동일한 노드 참조를 확보합니다.",
+    "expected": [],
     "ordered": false
   }
 ]

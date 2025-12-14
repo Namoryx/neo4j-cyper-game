@@ -1,29 +1,48 @@
-# Neo4j Cypher Studio (Rebuilt)
+# Quokka Cypher Game
 
-이 저장소는 이전 "Neo4j Cypher Quest" 게임 페이지를 전부 제거하고, 단일 HTML로 동작하는 새 웹페이지를 구성합니다. 가볍게 호스팅할 수 있고, 브랜딩/카피를 한 파일에서 바로 수정할 수 있습니다.
+A Vite + React mini-game for practicing Neo4j Cypher through story and practice modes with MCQ/Cypher grading.
 
-## 페이지 특징
-- **정적 구성**: 외부 의존성 없이 HTML/CSS/JS만으로 동작합니다.
-- **모듈형 섹션**: 히어로, 핵심 모듈, 워크플로우, FAQ, 아이디어 수집 폼으로 단순화했습니다.
-- **쉽게 커스터마이즈**: 색상과 카피는 `index.html` 상단의 CSS 변수와 텍스트를 바로 수정하면 됩니다.
-
-## 사용 방법
-1. 저장소를 클론하고 `index.html`을 브라우저로 엽니다.
-2. 정적 서버가 필요하면 간단히 실행하세요.
+## Development
+1. Install dependencies
    ```bash
-   python -m http.server 8000
-   # 또는
-   npx http-server .
+   npm install
    ```
-3. 버튼과 링크를 원하는 API나 문서 URL로 교체해 활용합니다.
+2. Start the dev server
+   ```bash
+   npm run dev
+   ```
+3. Run tests and build check
+   ```bash
+   npm run check
+   ```
 
-## 폴더 구조
-```
-.
-├── index.html   # 전체 페이지와 스타일, 간단한 스크립트가 모두 포함됨
-├── README.md    # 현재 문서
-└── LICENSE      # MIT 라이선스
-```
+## Deployment (GitHub Pages)
+GitHub Pages must serve the built `dist` output, not the raw `index.html` that points to `/src/main.jsx`. The repo is configured for a project page at `/neo4j-cyper-game/` via Vite's `base` setting.
 
-## 라이선스
-MIT License를 따릅니다. 필요에 맞게 수정 및 배포하세요.
+### Automated (recommended)
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that builds and publishes the `dist` folder to GitHub Pages on every push to `main` (or manual `Run workflow`).
+
+1. In GitHub: **Settings → Pages**
+   - Source: **GitHub Actions**
+2. Push to `main` or trigger the workflow. It will build with `npm run build` and deploy the artifact automatically.
+
+### Manual (fallback)
+1. Build the project
+   ```bash
+   npm run build
+   ```
+2. Publish the `dist` folder to `gh-pages`
+   ```bash
+   npm run deploy
+   ```
+   This uses the `gh-pages` CLI to push `dist` to the `gh-pages` branch.
+3. In GitHub: **Settings → Pages**
+   - Source: *Deploy from a branch*
+   - Branch: `gh-pages` / (root)
+
+### Quick validation
+After deployment, the generated `index.html` should reference hashed assets, e.g. `./assets/index-xxxxx.js`. If you still see `/src/main.jsx` in the served HTML, Pages is serving the source instead of the build output.
+
+## Notes
+- The Vite base path is set to `/neo4j-cyper-game/` for GitHub Pages project hosting.
+- For a user/organization root page, adjust `base` in `vite.config.js` accordingly.
