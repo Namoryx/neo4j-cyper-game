@@ -1,115 +1,29 @@
-# Neo4j Cypher Quest (GitHub Pages 버전)
+# Neo4j Cypher Studio (Rebuilt)
 
-한국어 UI로 즐길 수 있는 Neo4j Cypher 학습 게임입니다. GitHub Pages에서 정적 호스팅을 하고, Cloudflare Worker가 AuraDB와 통신합니다. 상단 진단 패널을 활용하면 헬스 체크, RETURN 1, 시드 삽입을 즉시 확인해 CORS/네트워크 문제를 추적할 수 있습니다.
+이 저장소는 이전 "Neo4j Cypher Quest" 게임 페이지를 전부 제거하고, 단일 HTML로 동작하는 새 웹페이지를 구성합니다. 가볍게 호스팅할 수 있고, 브랜딩/카피를 한 파일에서 바로 수정할 수 있습니다.
 
-## 빠른 시작 (로컬 미리보기)
+## 페이지 특징
+- **정적 구성**: 외부 의존성 없이 HTML/CSS/JS만으로 동작합니다.
+- **모듈형 섹션**: 히어로, 핵심 모듈, 워크플로우, FAQ, 아이디어 수집 폼으로 단순화했습니다.
+- **쉽게 커스터마이즈**: 색상과 카피는 `index.html` 상단의 CSS 변수와 텍스트를 바로 수정하면 됩니다.
 
-1. 저장소 클론 후 의존성 없이 바로 정적 파일을 엽니다.
-2. 로컬 서버 실행 (선택):
+## 사용 방법
+1. 저장소를 클론하고 `index.html`을 브라우저로 엽니다.
+2. 정적 서버가 필요하면 간단히 실행하세요.
    ```bash
-   npx http-server .
-   # 또는 Python
    python -m http.server 8000
+   # 또는
+   npx http-server .
    ```
-3. 브라우저에서 `http://localhost:8080` 또는 `http://localhost:8000`을 열고, 상단의 진단 패널에서 헬스체크/RETURN 1/Seed 버튼을 눌러 연결을 점검합니다.
+3. 버튼과 링크를 원하는 API나 문서 URL로 교체해 활용합니다.
 
-## GitHub Pages 배포
+## 폴더 구조
+```
+.
+├── index.html   # 전체 페이지와 스타일, 간단한 스크립트가 모두 포함됨
+├── README.md    # 현재 문서
+└── LICENSE      # MIT 라이선스
+```
 
-1. `Settings > Pages`에서 소스 브랜치를 `main` 및 `/ (root)`로 설정합니다.
-2. `index.html`과 `src/` 폴더가 자동으로 제공됩니다.
-3. 배포 도메인을 Cloudflare Worker CORS 허용 목록(ALLOWED_ORIGINS)과 일치시킵니다.
-
-## Cloudflare Worker 배포 (AuraDB 연결)
-
-1. `worker/wrangler.toml`에 이름과 날짜를 원하는 값으로 업데이트합니다.
-2. 환경 변수 설정:
-   ```bash
-   wrangler secrets put NEO4J_URI
-   wrangler secrets put NEO4J_USER
-   wrangler secrets put NEO4J_PASSWORD
-   wrangler kv:namespace create neo4j-cypher-quests # (필요 시)
-   ```
-   - ALLOWED_ORIGINS 환경 변수로 GitHub Pages 도메인(또는 `*`)을 지정하세요.
-3. 배포:
-   ```bash
-   cd worker
-   wrangler deploy
-   ```
-4. Worker 엔드포인트 예시는 다음과 같습니다.
-   - `https://<worker>.workers.dev/health`
-   - `/run` (POST, 읽기 전용, LIMIT 강제)
-   - `/submit` (POST, 읽기 전용, LIMIT 강제)
-   - `/seed` (POST, 샘플 데이터 삽입)
-   - `/reset` (POST, 필요 시 전체 데이터 초기화)
-
-## 환경 변수
-
-| 이름 | 설명 |
-| --- | --- |
-| `NEO4J_URI` | AuraDB Bolt URI (예: `neo4j+s://...`) |
-| `NEO4J_USER` | AuraDB 사용자명 |
-| `NEO4J_PASSWORD` | AuraDB 비밀번호 |
-| `ALLOWED_ORIGINS` | CORS 허용 Origin. GitHub Pages 도메인을 입력하면 브라우저 CORS 오류를 방지할 수 있습니다. |
-
-## 게임 화면 구성
-
-- **연결 진단 패널**: /health, RETURN 1, Seed 버튼과 로그, 체크리스트로 네트워크/CORS 문제를 즉시 확인합니다.
-- **퀘스트 패널**: 12개 이상의 챕터별 스토리/목표/제약/힌트/허용 연산을 제공합니다.
-- **Cypher 입력/채점**: 작성한 쿼리를 실행하거나 제출하여 채점을 받고, 잘못된 경우 세 가지 유형의 피드백(실행 오류, 제약 위반, 결과 불일치)을 확인합니다.
-
-## 실패 시 진단 절차
-
-1. **헬스체크 실패**: Worker가 동작하는지, 환경 변수가 올바른지 확인합니다.
-2. **RETURN 1 실패**: AuraDB 연결 또는 CORS 설정 문제일 수 있습니다. Worker 로그와 ALLOWED_ORIGINS 값을 점검하세요.
-3. **Seed 실패**: AuraDB 권한(WRITE) 또는 연결 문제를 확인하세요. READ 전용 엔드포인트에서는 쓰기 쿼리가 차단됩니다.
-4. 브라우저 개발자도구 네트워크 탭에서 4xx/5xx 응답과 CORS 헤더를 확인한 뒤, 같은 URL을 진단 패널로 다시 호출해 상태를 비교합니다.
-
-## 코드 구조
-
-- `index.html`: 한국어 UI, 진단 패널, 퀘스트/채점 화면
-- `src/config.js`: API_BASE 및 /run, /submit, /seed, /health 엔드포인트 정의, 공통 apiFetch 래퍼
-- `src/diagnostics.js`: 진단 패널 로직, 자동 체크리스트 업데이트
-- `src/quests.js`: 12개 퀘스트 데이터(스토리, 목표, 제약, 힌트, validator, allowedOps)
-- `src/checker.js`: 실행/제출 공통 처리, 제약 확인 및 3종 오답 피드백
-- `src/app.js`: UI 바인딩, 퀘스트 전환, 결과 렌더링
-- `src/storage.js`: 로컬 진행도 저장
-- `worker/worker.js`: Cloudflare Worker, AuraDB 연결, CORS/OPTIONS 처리, READ/WRITE 제한, LIMIT 강제, 위험 쿼리 차단, 시드 삽입
-- `worker/wrangler.toml`: Worker 설정 템플릿
-- `data/*.csv`: 내장 업로드용 기본 users/items/events CSV 샘플
-
-## 테스트
-
-- 정적 페이지는 브라우저에서 직접 열어 확인합니다.
-- Worker는 배포 후 아래 방법으로 엔드포인트를 점검합니다.
-  - 헬스 체크(실제 배포본):
-
-    ```bash
-    # 200 OK + 본문 "neo4j-runner ok"가 오면 정상
-    curl -i https://neo4j-runner.neo4j-namoryx.workers.dev/health
-    ```
-
-  - READ 쿼리 실행(실제 배포본):
-
-    ```bash
-    curl -s -X POST \
-      -H 'Content-Type: application/json' \
-      -d '{"cypher":"RETURN 1 AS ok"}' \
-      https://neo4j-runner.neo4j-namoryx.workers.dev/run
-    ```
-
-    200 응답으로 `{"ok":true,...,"data":[[{"ok":1}]]}` 형태가 오면 AuraDB/Worker가 정상 동작합니다. (CORS가 막히면 브라우저 콘솔에서 Blocked by CORS 에러가 발생하니, `ALLOWED_ORIGINS`에 호출 Origin이 포함됐는지 확인하세요.)
-
- - READ 쿼리 실행(PowerShell 예시):
-
-    ```powershell
-    $uri = "https://neo4j-runner.neo4j-namoryx.workers.dev/run"
-    $body = @{ cypher = "RETURN 1 AS ok" } | ConvertTo-Json -Compress
-    Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/json" -Body $body
-    ```
-
-    AuraDB 자격 증명은 Worker 시크릿(NEO4J_USER/NEO4J_PASSWORD)으로 주입되므로 클라이언트는 별도 인증 없이 호출할 수 있습니다.
-
-- **CSV 업로드(/import)**
-  - 헤더는 `users.csv: user_id,name`, `items.csv: item_id,name,category`, `events.csv: user_id,item_id,action,ts`(action=VIEW/CART/BUY) 형식입니다.
-  - 브라우저에서 FormData로 전송할 때는 `Content-Type`을 직접 넣지 말고 `body: formData`만 지정하세요.
-  - GitHub Pages 헤더 카드에 **내장 CSV로 DB 채우기** 버튼과 사용자가 직접 올리는 업로드 폼이 포함되어 있습니다.
+## 라이선스
+MIT License를 따릅니다. 필요에 맞게 수정 및 배포하세요.
