@@ -66,6 +66,12 @@ body {
   gap: 12px;
 }
 
+.finished-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .question-text {
   font-size: 18px;
   font-weight: 700;
@@ -102,6 +108,8 @@ body {
 .option-button.selected {
   border-color: #6366f1;
   background: #e0e7ff;
+  color: #111827;
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
 }
 
 .cypher-editor textarea {
@@ -113,6 +121,75 @@ body {
   background: #f8fafc;
   font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   resize: vertical;
+  font-size: 14px;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.32);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+.primary-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.secondary-button {
+  background: #e0e7ff;
+  color: #312e81;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.text-button {
+  border: none;
+  background: transparent;
+  color: #6366f1;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.error-text {
+  color: #ef4444;
+  margin: 0;
+  font-weight: 600;
+}
+
+.feedback-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feedback-body {
+  margin: 0;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+.feedback-body.muted {
+  color: #6b7280;
+  font-size: 14px;
 }
 
 .quokka {
@@ -142,6 +219,56 @@ body {
 .placeholder {
   margin: 0;
   color: #94a3b8;
+}
+
+.result-card,
+.diagnostics-card {
+  position: relative;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.muted {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.diagnostics-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.status {
+  margin: 0;
+  font-weight: 700;
+}
+
+.status.success {
+  color: #16a34a;
+}
+
+.status.error {
+  color: #ef4444;
 }
 
 @media (max-width: 720px) {

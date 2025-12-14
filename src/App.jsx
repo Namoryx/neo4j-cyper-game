@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import Quiz from './components/Quiz.jsx';
 import QuokkaCharacter from './components/QuokkaCharacter.jsx';
-import Feedback from './components/Feedback.jsx';
 import ResultPanel from './components/ResultPanel.jsx';
 import DiagnosticsPanel from './components/DiagnosticsPanel.jsx';
 
 function App() {
+  const [speech, setSpeech] = useState('문제 풀어봐!');
+  const [rows, setRows] = useState([]);
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -12,11 +15,10 @@ function App() {
       </header>
       <main className="app-main">
         <section className="app-layout">
-          <QuokkaCharacter speech="오늘도 그래프 우주로 출발!" />
+          <QuokkaCharacter speech={speech} />
           <div className="app-panels">
-            <Quiz />
-            <Feedback />
-            <ResultPanel />
+            <Quiz onSpeechChange={setSpeech} onResultsChange={setRows} />
+            <ResultPanel rows={rows} />
             <DiagnosticsPanel />
           </div>
         </section>
