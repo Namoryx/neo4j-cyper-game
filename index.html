@@ -3,680 +3,526 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Neo4j Cypher 퀘스트</title>
+    <title>Neo4j Cypher Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        --bg: #0f172a;
-        --panel: #111827;
-        --accent: #22d3ee;
-        --muted: #94a3b8;
-        --card: #0b1220;
+        --bg: #070a14;
+        --panel: #0f1628;
+        --accent: #8b5cf6;
+        --accent-2: #22d3ee;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --card: #0a1020;
+        --border: rgba(255, 255, 255, 0.08);
       }
       * {
         box-sizing: border-box;
       }
       body {
         margin: 0;
-        padding: 0;
-        background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
         font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
-        color: #e2e8f0;
+        background: radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.1), transparent 30%),
+          radial-gradient(circle at 80% 10%, rgba(139, 92, 246, 0.12), transparent 28%),
+          linear-gradient(180deg, #070a14 0%, #050811 100%);
+        color: var(--text);
+        line-height: 1.6;
       }
       header {
-        padding: 16px;
-        background: rgba(255, 255, 255, 0.02);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
         position: sticky;
         top: 0;
-        backdrop-filter: blur(8px);
-        z-index: 10;
+        z-index: 20;
+        backdrop-filter: blur(10px);
+        background: rgba(5, 8, 17, 0.85);
+        border-bottom: 1px solid var(--border);
       }
-      h1 {
-        margin: 0 0 8px;
-        font-size: 24px;
+      nav {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
       }
-      .subtitle {
-        margin: 0;
-        color: var(--muted);
-        font-size: 14px;
+      .brand {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-weight: 700;
+        letter-spacing: -0.03em;
       }
-      .container {
-        display: grid;
-        grid-template-columns: 320px 1fr;
-        gap: 16px;
-        padding: 16px;
+      .brand .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 16px rgba(34, 211, 238, 0.6);
       }
-      .card {
-        background: var(--card);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
-      }
-      #quest-list {
+      nav ul {
         list-style: none;
+        display: flex;
+        gap: 16px;
         margin: 0;
         padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        color: var(--muted);
       }
-      #quest-list li {
-        padding: 12px;
+      nav a {
+        color: inherit;
+        text-decoration: none;
+        padding: 6px 10px;
         border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        cursor: pointer;
         transition: 0.2s ease;
+        border: 1px solid transparent;
       }
-      #quest-list li:hover {
-        border-color: rgba(34, 211, 238, 0.5);
+      nav a:hover {
+        border-color: var(--border);
+        color: var(--text);
       }
-      #quest-list li.active {
-        background: rgba(34, 211, 238, 0.12);
-        border-color: #22d3ee;
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #0b1020;
+        font-weight: 700;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 0 12px 30px rgba(34, 211, 238, 0.22);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
-      #quest-list li.done::after {
-        content: '완료';
-        float: right;
-        color: #4ade80;
-        font-weight: 600;
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 40px rgba(34, 211, 238, 0.3);
+      }
+      .btn.secondary {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        box-shadow: none;
+        border: 1px solid var(--border);
+      }
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 18px 72px;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 26px;
+        margin: 32px 0 48px;
+        align-items: center;
+      }
+      .hero h1 {
+        margin: 0 0 12px;
+        font-size: clamp(32px, 5vw, 48px);
+        letter-spacing: -0.03em;
+      }
+      .hero p.lead {
+        color: var(--muted);
+        font-size: 18px;
+        margin: 0 0 18px;
       }
       .pill {
-        display: inline-block;
-        padding: 4px 10px;
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 12px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        margin-right: 6px;
-        font-size: 12px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--accent-2);
+        font-weight: 600;
+        letter-spacing: -0.01em;
       }
-      .detail-grid {
+      .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 12px;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      .card {
+        padding: 18px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      }
+      .card h3 {
+        margin: 0 0 8px;
+      }
+      .card p {
+        margin: 0;
+        color: var(--muted);
       }
       .badge {
         display: inline-block;
-        background: rgba(34, 211, 238, 0.18);
-        border: 1px solid #22d3ee;
-        color: #67e8f9;
         padding: 4px 10px;
         border-radius: 10px;
+        background: rgba(139, 92, 246, 0.16);
+        color: #d8b4fe;
         font-weight: 700;
         margin-bottom: 8px;
+        border: 1px solid rgba(139, 92, 246, 0.4);
       }
-      textarea {
-        width: 100%;
-        min-height: 140px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: #0a1221;
-        color: #e2e8f0;
-        padding: 12px;
-        font-size: 14px;
-        font-family: 'Courier New', monospace;
+      section {
+        margin: 64px 0;
       }
-      textarea:focus {
-        outline: 1px solid #22d3ee;
+      section h2 {
+        margin: 0 0 12px;
+        font-size: 26px;
+        letter-spacing: -0.02em;
       }
-      .actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 8px;
-      }
-      button {
-        border: none;
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-weight: 700;
-        cursor: pointer;
-        background: #1e293b;
-        color: #e2e8f0;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
-      button.primary {
-        background: linear-gradient(135deg, #06b6d4, #22d3ee);
-        color: #0b1220;
-        border: none;
-      }
-      button:hover {
-        transform: translateY(-1px);
-      }
-      #result table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      #result th,
-      #result td {
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 6px 8px;
-        text-align: left;
-      }
-      #feedback {
-        margin-top: 8px;
-        color: #67e8f9;
-        min-height: 24px;
-      }
-      .responsive {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .status-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 8px 16px;
+      section > p {
+        margin: 0 0 20px;
         color: var(--muted);
-        font-size: 14px;
       }
-      .status-chip {
-        padding: 4px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.04);
-        color: #e2e8f0;
-        font-weight: 600;
-      }
-      .status-chip[data-state='pending'] {
-        border-color: rgba(34, 211, 238, 0.5);
-        color: #67e8f9;
-      }
-      .status-chip[data-state='ok'] {
-        border-color: rgba(74, 222, 128, 0.5);
-        color: #86efac;
-        background: rgba(34, 197, 94, 0.1);
-      }
-      .status-chip[data-state='error'] {
-        border-color: rgba(244, 114, 182, 0.6);
-        color: #f472b6;
-        background: rgba(244, 114, 182, 0.1);
-      }
-      .tabs {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 16px;
-      }
-      .tab {
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.04);
-        color: #e2e8f0;
-        cursor: pointer;
-        font-weight: 700;
-      }
-      .tab.active {
-        border-color: #22d3ee;
-        color: #0b1220;
-        background: linear-gradient(135deg, #06b6d4, #22d3ee);
-      }
-      .tab-panel {
-        display: none;
-      }
-      .tab-panel.active {
-        display: block;
-      }
-      .admin-layout {
-        padding: 16px;
+      .timeline {
+        border-left: 2px solid rgba(255, 255, 255, 0.08);
+        padding-left: 18px;
         display: grid;
-        gap: 12px;
+        gap: 14px;
       }
-      .diag-panel {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
-        align-items: start;
-        margin-top: 12px;
-      }
-      .diag-actions button {
-        width: 100%;
-        margin-bottom: 6px;
-      }
-      .upload-card .muted {
-        color: var(--muted);
-        margin: 4px 0 10px;
-        font-size: 13px;
-      }
-      .upload-grid {
-        display: grid;
-        gap: 8px;
-        margin: 6px 0 10px;
-      }
-      .upload-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        font-size: 14px;
-      }
-      .upload-row input[type='file'] {
-        flex: 1;
-      }
-      .upload-card button {
-        width: 100%;
-        margin-top: 4px;
-      }
-      .hint {
-        color: var(--muted);
-        font-size: 12px;
-        margin: 6px 0 0;
-      }
-      #diagnostic-log {
-        background: #0a1221;
-        min-height: 120px;
-        max-height: 160px;
-        overflow: auto;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 8px;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-      }
-      .log-error {
-        color: #f472b6;
-      }
-      .log-info {
-        color: #cbd5e1;
-      }
-      .log-success {
-        color: #4ade80;
-      }
-      .checklist table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .checklist th,
-      .checklist td {
-        padding: 6px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
-      details.collapsible {
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 0 12px 12px;
-        background: var(--card);
-      }
-      details.collapsible summary {
-        cursor: pointer;
-        padding: 12px 0;
-        font-weight: 700;
-        color: #e2e8f0;
-      }
-      .tab-nav {
-        display: flex;
-        gap: 8px;
-        padding: 0 16px 16px;
-      }
-      .tab-button {
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.06);
-        color: #e2e8f0;
-        padding: 10px 14px;
-        border-radius: 10px;
-        cursor: pointer;
-      }
-      .tab-button.active {
-        background: linear-gradient(135deg, #06b6d4, #22d3ee);
-        color: #0b1220;
-        border-color: transparent;
-      }
-      .tab-panel {
-        display: none;
-      }
-      .tab-panel.active {
-        display: block;
-      }
-      .scroll-row {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: minmax(240px, 1fr);
-        gap: 12px;
-        overflow-x: auto;
-        padding-bottom: 6px;
-      }
-      .stat-card {
+      .timeline .step {
+        position: relative;
+        padding: 12px 14px 12px 18px;
         background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
       }
-      .stat-value {
-        font-size: 24px;
-        font-weight: 700;
-        margin: 4px 0 8px;
+      .timeline .step::before {
+        content: '';
+        position: absolute;
+        left: -30px;
+        top: 18px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 12px rgba(139, 92, 246, 0.7);
       }
-      .muted-list {
-        color: var(--muted);
-        font-size: 13px;
-        padding-left: 16px;
-        margin: 0;
-      }
-      .flex-between {
+      .cta {
         display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
         align-items: center;
-        justify-content: space-between;
-        gap: 8px;
       }
-      .quick-grid {
+      .metrics {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .metric {
+        padding: 14px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+      }
+      .metric strong {
+        font-size: 22px;
+      }
+      .faq {
+        display: grid;
         gap: 10px;
       }
-      .preview-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 12px;
-      }
-      .table-card table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .table-card th,
-      .table-card td {
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 6px 8px;
-        text-align: left;
-        font-size: 13px;
-      }
-      .collapsible {
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
-        background: #0a1221;
-        padding: 10px;
-        max-height: 240px;
-        overflow: auto;
-        transition: max-height 0.2s ease;
-      }
-      .collapsible.collapsed {
-        max-height: 0;
-        padding: 0 10px;
+      .faq-item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
         overflow: hidden;
       }
-      .markdown {
-        line-height: 1.6;
-        color: #e2e8f0;
+      .faq-title {
+        margin: 0;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
       }
-      .markdown h3,
-      .markdown h4 {
-        margin: 12px 0 6px;
+      .faq-title span {
+        color: var(--muted);
       }
-      .markdown p {
-        margin: 6px 0;
-        color: #cbd5e1;
+      .faq-content {
+        padding: 0 14px 14px;
+        color: var(--muted);
+        display: none;
       }
-      .markdown ul {
-        padding-left: 18px;
-        margin: 6px 0 10px;
-        color: #cbd5e1;
+      .faq-item.active .faq-content {
+        display: block;
       }
-      .markdown li {
-        margin: 4px 0;
+      .faq-item.active .faq-title span {
+        color: var(--accent-2);
       }
-      .markdown code {
+      .panel {
+        padding: 18px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .input-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
         background: rgba(255, 255, 255, 0.06);
-        padding: 2px 6px;
-        border-radius: 6px;
+        color: var(--text);
+        font-family: inherit;
       }
-      .section-title {
-        margin: 0 0 8px;
+      textarea {
+        min-height: 120px;
       }
-      @media (max-width: 960px) {
-        .container {
-          grid-template-columns: 1fr;
+      footer {
+        padding: 24px 18px 36px;
+        border-top: 1px solid var(--border);
+        background: rgba(5, 8, 17, 0.9);
+        text-align: center;
+        color: var(--muted);
+      }
+      @media (max-width: 640px) {
+        nav ul {
+          display: none;
         }
-        .diag-panel {
-          grid-template-columns: 1fr;
-        }
-        .status-bar {
-          flex-direction: column;
-          align-items: flex-start;
+        nav {
+          justify-content: space-between;
         }
       }
     </style>
   </head>
   <body>
     <header>
-      <h1>Neo4j Cypher 퀘스트</h1>
-      <p class="subtitle">GitHub Pages용 한국어 Neo4j 미션 게임 · 연결 진단을 활용해 네트워크/CORS 문제를 바로 확인하세요.</p>
+      <nav>
+        <div class="brand">
+          <div class="dot" aria-hidden="true"></div>
+          Neo4j Cypher Studio
+        </div>
+        <ul>
+          <li><a href="#overview">개요</a></li>
+          <li><a href="#modules">모듈</a></li>
+          <li><a href="#flow">워크플로우</a></li>
+          <li><a href="#contact">문의</a></li>
+        </ul>
+        <button class="btn" id="ctaButton">시작 안내 받기</button>
+      </nav>
     </header>
 
-    <div class="tab-nav">
-      <button class="tab-button active" data-target="tab-quests">퀘스트</button>
-      <button class="tab-button" data-target="tab-explorer">Explorer</button>
-      <button class="tab-button" data-target="tab-rules">운영 철칙</button>
-    </div>
-
     <main>
-      <div id="tab-quests" class="tab-panel active">
-        <div class="container">
-          <section class="card">
-            <h3>퀘스트 목록</h3>
-            <ul id="quest-list"></ul>
-          </section>
+      <section class="hero">
+        <div>
+          <div class="pill">새로운 빌드 · 2024</div>
+          <h1>Cypher 학습과 데모를 위한 완전히 새로 디자인된 웹 스튜디오</h1>
+          <p class="lead">
+            이전 버전을 모두 비우고, 처음부터 다시 만든 Neo4j 실습 웹페이지입니다. 콘셉트, 카피,
+            시각 요소까지 한 번에 갈아엎어 깔끔한 온보딩을 제공합니다.
+          </p>
+          <div class="cta">
+            <button class="btn">데모 예약</button>
+            <button class="btn secondary" id="scrollToModules">기능 살펴보기</button>
+          </div>
+          <div class="metrics">
+            <div class="metric"><strong>15분</strong><br />설치 없이 바로 체험</div>
+            <div class="metric"><strong>3단계</strong><br />워크플로우 템플릿</div>
+            <div class="metric"><strong>100%</strong><br />클라이언트 사이드</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="badge">스토리보드</div>
+          <h3>새 페이지 구조</h3>
+          <p>
+            • 집중되는 히어로 섹션<br />
+            • 모듈형 기능 카드<br />
+            • 단계별 진행 표시와 FAQ<br />
+            • 연락/아이디어 수집 폼
+          </p>
+        </div>
+      </section>
 
-          <section class="card responsive">
+      <section id="overview">
+        <h2>이 웹페이지는 무엇을 목표로 하나요?</h2>
+        <p>
+          한 번에 읽히는 정보 구조, 빠른 인터랙션, 깔끔한 톤앤매너를 제공해 Cypher 실습과
+          데모를 쉽게 소개합니다. 단일 HTML/CSS/JS로 구성해 어떤 호스팅 환경에서도 가볍게 동작합니다.
+        </p>
+        <div class="grid">
+          <div class="card">
+            <div class="badge">UX</div>
+            <h3>집중된 온보딩</h3>
+            <p>영웅 영역에 핵심 가치를 배치하고, CTA를 두 갈래로 제공하여 방문자가 바로 행동할 수 있게 설계했습니다.</p>
+          </div>
+          <div class="card">
+            <div class="badge">구조</div>
+            <h3>모듈형 정보 카드</h3>
+            <p>학습 포인트, 데모 시나리오, 환경 안내를 각각 카드로 분리해 원하는 내용만 빠르게 훑어볼 수 있습니다.</p>
+          </div>
+          <div class="card">
+            <div class="badge">운영</div>
+            <h3>가벼운 정적 페이지</h3>
+            <p>외부 의존성을 최소화해 GitHub Pages, 사내 정적 호스팅 등 어디서든 그대로 배포할 수 있습니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="modules">
+        <h2>핵심 모듈</h2>
+        <p>새로운 페이지는 세 가지 모듈을 중심으로 구성됩니다. 필요에 따라 문구나 링크만 교체해 활용하세요.</p>
+        <div class="grid">
+          <div class="card">
+            <h3>Cypher 플레이그라운드</h3>
+            <p>최소화된 에디터 영역과 결과 요약 블록을 배치해 쿼리 체험을 단순화합니다. 향후 API 연동 자리도 비워 두었습니다.</p>
+          </div>
+          <div class="card">
+            <h3>가이드 & 체크리스트</h3>
+            <p>3단계 가이드(연결·모델링·테스트)로 빠르게 살펴볼 수 있도록 제작했습니다. 각 단계에 팁을 덧붙여 기억에 남습니다.</p>
+          </div>
+          <div class="card">
+            <h3>리소스 허브</h3>
+            <p>문서, 샘플 데이터, 데모 워커 링크를 한 곳에 묶어둔 섹션을 제공해 복잡한 설명 없이도 필요한 자료를 바로 찾을 수 있습니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="flow">
+        <h2>워크플로우</h2>
+        <p>Neo4j를 처음 만나는 사람도 이 순서를 따라가면 바로 실행과 시각화까지 도달하도록 설계했습니다.</p>
+        <div class="timeline">
+          <div class="step">
+            <strong>1. 연결</strong>
+            <p>Aura 또는 온프레미스 인스턴스를 연결합니다. Connection URI, 사용자명, 비밀번호를 저장하지 않고 즉시 세션만 사용합니다.</p>
+          </div>
+          <div class="step">
+            <strong>2. 모델링</strong>
+            <p>노드와 릴레이션 예시를 한 눈에 볼 수 있는 미니 인포그래픽을 제공합니다. 필요하면 CSV 업로드 위치를 연결해 확장할 수 있습니다.</p>
+          </div>
+          <div class="step">
+            <strong>3. 쿼리 & 검증</strong>
+            <p>테스트 쿼리를 실행하고, 결과를 스니펫으로 공유할 수 있는 버튼 자리까지 포함했습니다. 데모 시 리듬감을 유지하세요.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>FAQ & 빠른 답변</h2>
+        <p>페이지에 자주 들어갈 질문을 미리 정의했습니다. 필요하면 제목과 본문만 수정해 바로 사용할 수 있습니다.</p>
+        <div class="faq">
+          <div class="faq-item active">
+            <div class="faq-title">
+              <strong>이 페이지는 완전히 새로 만든 건가요?</strong>
+              <span>열림</span>
+            </div>
+            <div class="faq-content">
+              이전 게임 버전의 코드와 자산을 모두 제거하고, 최소한의 HTML/CSS/JS로 다시 구성했습니다. 필요 시 기능을 덧붙일 수 있도록 비워둔 영역만 남겨 두었습니다.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-title">
+              <strong>서버나 Worker 연동이 필수인가요?</strong>
+              <span>닫힘</span>
+            </div>
+            <div class="faq-content">
+              아닙니다. 정적 호스팅만으로 동작하며, 추후 API가 준비되면 버튼과 링크만 교체해 연결하면 됩니다.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-title">
+              <strong>브랜딩이나 카피를 어디서 수정하나요?</strong>
+              <span>닫힘</span>
+            </div>
+            <div class="faq-content">
+              모든 텍스트는 `index.html`에 모여 있습니다. 로고 색상과 버튼 스타일도 상단 CSS 변수만 수정하면 일관되게 반영됩니다.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact">
+        <h2>아이디어를 남겨주세요</h2>
+        <p>추가하고 싶은 기능이나 데모 요청이 있다면 아래 양식에 적어 주세요. 페이지 상호작용은 간단한 스크립트만 사용합니다.</p>
+        <div class="panel">
+          <div class="input-row">
             <div>
-              <span class="badge" id="chapter-badge"></span>
-              <h2 id="quest-title"></h2>
-              <div class="detail-grid">
-                <div>
-                  <h4>스토리</h4>
-                  <p id="quest-story"></p>
-                </div>
-                <div>
-                  <h4>목표</h4>
-                  <p id="quest-goal"></p>
-                </div>
-                <div>
-                  <h4>제약</h4>
-                  <p id="quest-constraint"></p>
-                </div>
-                <div>
-                  <h4>힌트</h4>
-                  <p id="quest-hint"></p>
-                </div>
-              </div>
-              <div>
-                <h4>허용 연산</h4>
-                <div id="quest-allowed"></div>
-              </div>
+              <label for="name">이름</label>
+              <input id="name" type="text" placeholder="예: 김데이터" />
             </div>
-
             <div>
-              <label for="cypher-input"><strong>Cypher 입력</strong></label>
-              <textarea id="cypher-input" placeholder="여기에 Cypher를 작성하세요"></textarea>
-              <div class="actions">
-                <button id="btn-run">실행만 하기</button>
-                <button id="btn-submit" class="primary">제출 및 채점</button>
-              </div>
-              <div id="feedback"></div>
-              <div id="result"></div>
+              <label for="role">역할</label>
+              <select id="role">
+                <option>데이터 엔지니어</option>
+                <option>애플리케이션 개발자</option>
+                <option>프로덕트 매니저</option>
+                <option>교육 담당자</option>
+              </select>
             </div>
-          </section>
+          </div>
+          <label for="message">하고 싶은 말</label>
+          <textarea id="message" placeholder="아이디어나 요청을 적어 주세요"></textarea>
+          <div class="cta" style="margin-top: 14px">
+            <button class="btn" id="submitIdea">메모 저장</button>
+            <div id="formFeedback" style="color: var(--muted)"></div>
+          </div>
         </div>
-      </div>
-
-      <div id="tab-explorer" class="tab-panel">
-        <div class="container">
-          <section class="card" style="grid-column: 1 / -1;">
-            <div class="flex-between">
-              <div>
-                <h3 class="section-title">Explorer</h3>
-                <p class="subtitle">읽기 전용 요약과 샘플 데이터 미리보기</p>
-              </div>
-              <div class="actions" style="margin-top: 0;">
-                <button id="btn-refresh-explorer">요약 새로고침</button>
-                <button id="btn-toggle-log">로그 접기/펴기</button>
-              </div>
-            </div>
-            <div class="scroll-row" id="explorer-metrics">
-              <div class="stat-card">
-                <strong>그래프 개요</strong>
-                <div class="stat-value"><span id="count-nodes">-</span> 노드</div>
-                <div class="stat-value" style="font-size: 18px;"><span id="count-rels">-</span> 관계</div>
-                <p class="muted" style="margin: 0;">MATCH 기반 읽기 전용 집계</p>
-              </div>
-              <div class="stat-card">
-                <strong>상위 카테고리</strong>
-                <ol class="muted-list" id="list-categories"></ol>
-              </div>
-              <div class="stat-card">
-                <strong>Top Viewed</strong>
-                <ol class="muted-list" id="list-viewed"></ol>
-              </div>
-              <div class="stat-card">
-                <strong>Top Purchased</strong>
-                <ol class="muted-list" id="list-purchased"></ol>
-              </div>
-            </div>
-          </section>
-
-          <section class="card" style="grid-column: 1 / -1;">
-            <div class="flex-between">
-              <h4 class="section-title">빠른 조회/에디터 프리필</h4>
-              <small class="muted">/run 엔드포인트로 읽기 전용 실행</small>
-            </div>
-            <div class="quick-grid" id="quick-query-buttons"></div>
-            <div id="explorer-result" style="margin-top: 12px;"></div>
-          </section>
-
-          <section class="card preview-grid" style="grid-column: 1 / -1;">
-            <div class="table-card">
-              <div class="flex-between">
-                <h4 class="section-title">Users 프리뷰</h4>
-                <small class="muted">LIMIT 5</small>
-              </div>
-              <div id="preview-users"></div>
-            </div>
-            <div class="table-card">
-              <div class="flex-between">
-                <h4 class="section-title">Products 프리뷰</h4>
-                <small class="muted">LIMIT 5</small>
-              </div>
-              <div id="preview-products"></div>
-            </div>
-          </section>
-
-          <section class="card" style="grid-column: 1 / -1;">
-            <div class="flex-between">
-              <h4 class="section-title">Explorer 로그</h4>
-              <small class="muted">읽기 전용 호출 내역</small>
-            </div>
-            <div id="explorer-log" class="collapsible"></div>
-          </section>
-        </div>
-      </div>
-
-      <div id="tab-rules" class="tab-panel">
-        <div class="container">
-          <section class="card" style="grid-column: 1 / -1;">
-            <h3 class="section-title">운영 철칙 (Markdown)</h3>
-            <article class="markdown">
-              <p><strong>Always follow the instructions in plan.md. When I say "go", find the next unmarked test in plan.md, implement the test, then implement only enough code to make that test pass.</strong></p>
-
-              <h3>ROLE AND EXPERTISE</h3>
-              <ul>
-                <li>You are a senior software engineer who follows Kent Beck's Test-Driven Development (TDD) and Tidy First principles.</li>
-                <li>Your purpose is to guide development following these methodologies precisely.</li>
-              </ul>
-
-              <h3>CORE DEVELOPMENT PRINCIPLES</h3>
-              <ul>
-                <li>Always follow the TDD cycle: Red → Green → Refactor.</li>
-                <li>Write the simplest failing test first.</li>
-                <li>Implement the minimum code needed to make tests pass.</li>
-                <li>Refactor only after tests are passing.</li>
-                <li>Follow Beck's "Tidy First" approach by separating structural changes from behavioral changes.</li>
-                <li>Maintain high code quality throughout development.</li>
-              </ul>
-
-              <h3>TDD METHODOLOGY GUIDANCE</h3>
-              <ul>
-                <li>Start by writing a failing test that defines a small increment of functionality.</li>
-                <li>Use meaningful test names that describe behavior (e.g., <code>shouldSumTwoPositiveNumbers</code>).</li>
-                <li>Make test failures clear and informative.</li>
-                <li>Write just enough code to make the test pass - no more.</li>
-                <li>Once tests pass, consider if refactoring is needed.</li>
-                <li>Repeat the cycle for new functionality.</li>
-                <li>When fixing a defect, first write an API-level failing test then write the smallest possible test that replicates the problem then get both tests to pass.</li>
-              </ul>
-
-              <h3>TIDY FIRST APPROACH</h3>
-              <ul>
-                <li>
-                  Separate all changes into two distinct types:
-                  <ul>
-                    <li><strong>STRUCTURAL CHANGES</strong>: Rearranging code without changing behavior (renaming, extracting methods, moving code).</li>
-                    <li><strong>BEHAVIORAL CHANGES</strong>: Adding or modifying actual functionality.</li>
-                  </ul>
-                </li>
-                <li>Never mix structural and behavioral changes in the same commit.</li>
-                <li>Always make structural changes first when both are needed.</li>
-                <li>Validate structural changes do not alter behavior by running tests before and after.</li>
-              </ul>
-
-              <h3>COMMIT DISCIPLINE</h3>
-              <ul>
-                <li>Only commit when all tests are passing.</li>
-                <li>Resolve all compiler/linter warnings before committing.</li>
-                <li>Ensure each commit represents a single logical unit of work.</li>
-                <li>Commit messages should clearly state whether the commit contains structural or behavioral changes.</li>
-                <li>Prefer small, frequent commits over large, infrequent ones.</li>
-              </ul>
-
-              <h3>CODE QUALITY STANDARDS</h3>
-              <ul>
-                <li>Eliminate duplication ruthlessly.</li>
-                <li>Express intent clearly through naming and structure.</li>
-                <li>Make dependencies explicit.</li>
-                <li>Keep methods small and focused on a single responsibility.</li>
-                <li>Minimize state and side effects.</li>
-                <li>Use the simplest solution that could possibly work.</li>
-              </ul>
-
-              <h3>REFACTORING GUIDELINES</h3>
-              <ul>
-                <li>Refactor only when tests are passing (in the "Green" phase).</li>
-                <li>Use established refactoring patterns with their proper names.</li>
-                <li>Make one refactoring change at a time.</li>
-                <li>Run tests after each refactoring step.</li>
-                <li>Prioritize refactorings that remove duplication or improve clarity.</li>
-              </ul>
-
-              <h3>EXAMPLE WORKFLOW</h3>
-              <ul>
-                <li>Write a simple failing test for a small part of the feature.</li>
-                <li>Implement the bare minimum to make it pass.</li>
-                <li>Run tests to confirm they pass (Green).</li>
-                <li>Make necessary structural changes (Tidy First), running tests after each change.</li>
-                <li>Commit structural changes separately.</li>
-                <li>Add another test for the next small increment of functionality.</li>
-                <li>Repeat until the feature is complete, committing behavioral changes separately from structural ones.</li>
-                <li>Follow this process precisely, always prioritizing clean, well-tested code over quick implementation.</li>
-              </ul>
-
-              <p>Always write one test at a time, make it run, then improve structure. Always run all the tests (except long-running tests) each time.</p>
-            </article>
-          </section>
-        </div>
-      </div>
+      </section>
     </main>
 
-    <script type="module" src="./src/config.js"></script>
-    <script type="module" src="./src/diagnostics.js"></script>
-    <script type="module" src="./src/quests.js"></script>
-    <script type="module" src="./src/storage.js"></script>
-    <script type="module" src="./src/checker.js"></script>
-    <script type="module" src="./src/app.js"></script>
+    <footer>새롭게 시작한 Neo4j Cypher Studio · 단일 HTML로 동작하는 정적 페이지</footer>
+
+    <script>
+      const faqItems = document.querySelectorAll('.faq-item');
+      faqItems.forEach((item) => {
+        item.querySelector('.faq-title').addEventListener('click', () => {
+          faqItems.forEach((el) => el.classList.remove('active'));
+          item.classList.add('active');
+          item.querySelector('.faq-title span').textContent = '열림';
+          faqItems.forEach((el) => {
+            if (el !== item) el.querySelector('.faq-title span').textContent = '닫힘';
+          });
+        });
+      });
+
+      document.getElementById('scrollToModules').addEventListener('click', () => {
+        document.getElementById('modules').scrollIntoView({ behavior: 'smooth' });
+      });
+
+      document.getElementById('ctaButton').addEventListener('click', () => {
+        document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+      });
+
+      document.getElementById('submitIdea').addEventListener('click', () => {
+        const name = document.getElementById('name').value.trim();
+        const role = document.getElementById('role').value;
+        const message = document.getElementById('message').value.trim();
+        const feedback = document.getElementById('formFeedback');
+
+        if (!message) {
+          feedback.textContent = '메시지를 입력해 주세요.';
+          feedback.style.color = '#fca5a5';
+          return;
+        }
+
+        const summary = [name || '익명', role, message].join(' · ');
+        localStorage.setItem('neo4j-cypher-idea', summary);
+        feedback.textContent = '로컬에 메모를 저장했습니다. 언제든 수정하거나 지워도 됩니다.';
+        feedback.style.color = '#a5f3fc';
+      });
+    </script>
   </body>
 </html>
