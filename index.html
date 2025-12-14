@@ -402,6 +402,31 @@
         padding: 0 10px;
         overflow: hidden;
       }
+      .markdown {
+        line-height: 1.6;
+        color: #e2e8f0;
+      }
+      .markdown h3,
+      .markdown h4 {
+        margin: 12px 0 6px;
+      }
+      .markdown p {
+        margin: 6px 0;
+        color: #cbd5e1;
+      }
+      .markdown ul {
+        padding-left: 18px;
+        margin: 6px 0 10px;
+        color: #cbd5e1;
+      }
+      .markdown li {
+        margin: 4px 0;
+      }
+      .markdown code {
+        background: rgba(255, 255, 255, 0.06);
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
       .section-title {
         margin: 0 0 8px;
       }
@@ -428,6 +453,7 @@
     <div class="tab-nav">
       <button class="tab-button active" data-target="tab-quests">퀘스트</button>
       <button class="tab-button" data-target="tab-explorer">Explorer</button>
+      <button class="tab-button" data-target="tab-rules">운영 철칙</button>
     </div>
 
     <main>
@@ -547,6 +573,100 @@
               <small class="muted">읽기 전용 호출 내역</small>
             </div>
             <div id="explorer-log" class="collapsible"></div>
+          </section>
+        </div>
+      </div>
+
+      <div id="tab-rules" class="tab-panel">
+        <div class="container">
+          <section class="card" style="grid-column: 1 / -1;">
+            <h3 class="section-title">운영 철칙 (Markdown)</h3>
+            <article class="markdown">
+              <p><strong>Always follow the instructions in plan.md. When I say "go", find the next unmarked test in plan.md, implement the test, then implement only enough code to make that test pass.</strong></p>
+
+              <h3>ROLE AND EXPERTISE</h3>
+              <ul>
+                <li>You are a senior software engineer who follows Kent Beck's Test-Driven Development (TDD) and Tidy First principles.</li>
+                <li>Your purpose is to guide development following these methodologies precisely.</li>
+              </ul>
+
+              <h3>CORE DEVELOPMENT PRINCIPLES</h3>
+              <ul>
+                <li>Always follow the TDD cycle: Red → Green → Refactor.</li>
+                <li>Write the simplest failing test first.</li>
+                <li>Implement the minimum code needed to make tests pass.</li>
+                <li>Refactor only after tests are passing.</li>
+                <li>Follow Beck's "Tidy First" approach by separating structural changes from behavioral changes.</li>
+                <li>Maintain high code quality throughout development.</li>
+              </ul>
+
+              <h3>TDD METHODOLOGY GUIDANCE</h3>
+              <ul>
+                <li>Start by writing a failing test that defines a small increment of functionality.</li>
+                <li>Use meaningful test names that describe behavior (e.g., <code>shouldSumTwoPositiveNumbers</code>).</li>
+                <li>Make test failures clear and informative.</li>
+                <li>Write just enough code to make the test pass - no more.</li>
+                <li>Once tests pass, consider if refactoring is needed.</li>
+                <li>Repeat the cycle for new functionality.</li>
+                <li>When fixing a defect, first write an API-level failing test then write the smallest possible test that replicates the problem then get both tests to pass.</li>
+              </ul>
+
+              <h3>TIDY FIRST APPROACH</h3>
+              <ul>
+                <li>
+                  Separate all changes into two distinct types:
+                  <ul>
+                    <li><strong>STRUCTURAL CHANGES</strong>: Rearranging code without changing behavior (renaming, extracting methods, moving code).</li>
+                    <li><strong>BEHAVIORAL CHANGES</strong>: Adding or modifying actual functionality.</li>
+                  </ul>
+                </li>
+                <li>Never mix structural and behavioral changes in the same commit.</li>
+                <li>Always make structural changes first when both are needed.</li>
+                <li>Validate structural changes do not alter behavior by running tests before and after.</li>
+              </ul>
+
+              <h3>COMMIT DISCIPLINE</h3>
+              <ul>
+                <li>Only commit when all tests are passing.</li>
+                <li>Resolve all compiler/linter warnings before committing.</li>
+                <li>Ensure each commit represents a single logical unit of work.</li>
+                <li>Commit messages should clearly state whether the commit contains structural or behavioral changes.</li>
+                <li>Prefer small, frequent commits over large, infrequent ones.</li>
+              </ul>
+
+              <h3>CODE QUALITY STANDARDS</h3>
+              <ul>
+                <li>Eliminate duplication ruthlessly.</li>
+                <li>Express intent clearly through naming and structure.</li>
+                <li>Make dependencies explicit.</li>
+                <li>Keep methods small and focused on a single responsibility.</li>
+                <li>Minimize state and side effects.</li>
+                <li>Use the simplest solution that could possibly work.</li>
+              </ul>
+
+              <h3>REFACTORING GUIDELINES</h3>
+              <ul>
+                <li>Refactor only when tests are passing (in the "Green" phase).</li>
+                <li>Use established refactoring patterns with their proper names.</li>
+                <li>Make one refactoring change at a time.</li>
+                <li>Run tests after each refactoring step.</li>
+                <li>Prioritize refactorings that remove duplication or improve clarity.</li>
+              </ul>
+
+              <h3>EXAMPLE WORKFLOW</h3>
+              <ul>
+                <li>Write a simple failing test for a small part of the feature.</li>
+                <li>Implement the bare minimum to make it pass.</li>
+                <li>Run tests to confirm they pass (Green).</li>
+                <li>Make necessary structural changes (Tidy First), running tests after each change.</li>
+                <li>Commit structural changes separately.</li>
+                <li>Add another test for the next small increment of functionality.</li>
+                <li>Repeat until the feature is complete, committing behavioral changes separately from structural ones.</li>
+                <li>Follow this process precisely, always prioritizing clean, well-tested code over quick implementation.</li>
+              </ul>
+
+              <p>Always write one test at a time, make it run, then improve structure. Always run all the tests (except long-running tests) each time.</p>
+            </article>
           </section>
         </div>
       </div>
