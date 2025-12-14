@@ -54,25 +54,25 @@
     "id": "cypher-001",
     "type": "cypher",
     "difficulty": "easy",
+    "question": "\"RETURN 1 AS one\" 결과를 반환하는 Cypher를 입력하세요.",
+    "hint": [
+      "RETURN 1 AS one 을 그대로 입력해 보세요",
+      "컬럼명 one이 결과에 포함되어야 합니다"
+    ],
+    "explanation": "기본 반환문을 입력하는 연습 문제입니다.",
+    "expected": ["1"],
+    "ordered": true
+  },
+  {
+    "id": "cypher-002",
+    "type": "cypher",
+    "difficulty": "medium",
     "question": "특정 사용자 U1과 공통 친구를 가진 모든 사용자의 이름을 조회하는 쿼리를 작성하세요.",
     "hint": [
       "MATCH 절에서 동일한 이웃을 공유하는 패턴을 찾아보세요",
       "본인 노드는 결과에서 제외합니다"
     ],
     "explanation": "공통 이웃을 찾은 뒤 자기 자신은 제외하고 이름을 반환하는 문제입니다.",
-    "expected": ["Alex", "Jamie"],
-    "ordered": false
-  },
-  {
-    "id": "cypher-002",
-    "type": "cypher",
-    "difficulty": "medium",
-    "question": "최근 일주일간 생성된 :Post 노드 중 좋아요가 10개 이상인 게시물을 조회하는 MATCH/WHERE/RETURN 쿼리를 작성하세요.",
-    "hint": [
-      "datetime() 함수를 활용해보세요",
-      "createdAt 같은 날짜 속성을 비교합니다"
-    ],
-    "explanation": "날짜 비교와 숫자 필터를 조합하는 기본 패턴입니다.",
     "expected": [],
     "ordered": false
   },

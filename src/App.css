@@ -145,6 +145,30 @@ body {
   transform: translateY(0);
 }
 
+.primary-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.secondary-button {
+  background: #e0e7ff;
+  color: #312e81;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.text-button {
+  border: none;
+  background: transparent;
+  color: #6366f1;
+  cursor: pointer;
+  font-weight: 700;
+}
+
 .error-text {
   color: #ef4444;
   margin: 0;
@@ -195,6 +219,56 @@ body {
 .placeholder {
   margin: 0;
   color: #94a3b8;
+}
+
+.result-card,
+.diagnostics-card {
+  position: relative;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.muted {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.diagnostics-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.status {
+  margin: 0;
+  font-weight: 700;
+}
+
+.status.success {
+  color: #16a34a;
+}
+
+.status.error {
+  color: #ef4444;
 }
 
 @media (max-width: 720px) {

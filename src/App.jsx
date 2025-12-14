@@ -6,6 +6,7 @@ import DiagnosticsPanel from './components/DiagnosticsPanel.jsx';
 
 function App() {
   const [speech, setSpeech] = useState('문제 풀어봐!');
+  const [rows, setRows] = useState([]);
 
   return (
     <div className="app-shell">
@@ -16,8 +17,8 @@ function App() {
         <section className="app-layout">
           <QuokkaCharacter speech={speech} />
           <div className="app-panels">
-            <Quiz onSpeechChange={setSpeech} />
-            <ResultPanel />
+            <Quiz onSpeechChange={setSpeech} onResultsChange={setRows} />
+            <ResultPanel rows={rows} />
             <DiagnosticsPanel />
           </div>
         </section>

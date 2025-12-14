@@ -2,14 +2,18 @@ import { useEffect, useState } from 'react';
 import questions from '../data/questions.json';
 import QuestionCard from './QuestionCard.jsx';
 import Feedback from './Feedback.jsx';
+import { runCypher } from '../services/api.js';
+import { toRows } from '../utils/normalize.js';
+import { gradeCypher, gradeMcq } from '../utils/grading.js';
 
-function Quiz({ onSpeechChange }) {
+function Quiz({ onSpeechChange, onResultsChange }) {
   const [index, setIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [cypherText, setCypherText] = useState('');
   const [phase, setPhase] = useState('answering');
   const [isCorrect, setIsCorrect] = useState(null);
   const [lastError, setLastError] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
 
   const currentQuestion = questions[index];
 
@@ -36,9 +40,10 @@ function Quiz({ onSpeechChange }) {
     setIsCorrect(null);
     setLastError(null);
     setPhase('answering');
+    onResultsChange?.([]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setLastError(null);
     if (!currentQuestion) return;
 
@@ -48,9 +53,10 @@ function Quiz({ onSpeechChange }) {
         return;
       }
 
-      const correct = selectedOption === currentQuestion.answer;
-      setIsCorrect(correct);
+      const { isCorrect: mcqCorrect } = gradeMcq(currentQuestion, selectedOption);
+      setIsCorrect(mcqCorrect);
       setPhase('feedback');
+      onResultsChange?.([]);
       return;
     }
 
@@ -59,8 +65,20 @@ function Quiz({ onSpeechChange }) {
       return;
     }
 
-    setIsCorrect(false);
-    setPhase('feedback');
+    try {
+      setIsRunning(true);
+      const response = await runCypher(cypherText, {});
+      const rows = toRows(response);
+      onResultsChange?.(rows?.slice(0, 10) ?? []);
+      const { isCorrect: cypherCorrect } = gradeCypher(currentQuestion, rows);
+      setIsCorrect(cypherCorrect);
+      setPhase('feedback');
+    } catch (error) {
+      setLastError(error?.message || '실행 중 오류가 발생했습니다.');
+      onResultsChange?.([]);
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   const handleNext = () => {
@@ -110,8 +128,8 @@ function Quiz({ onSpeechChange }) {
             onSubmit={handleSubmit}
           />
           {lastError ? <p className="error-text">{lastError}</p> : null}
-          <button type="button" className="primary-button" onClick={handleSubmit}>
-            제출
+          <button type="button" className="primary-button" onClick={handleSubmit} disabled={isRunning}>
+            {isRunning ? '실행중...' : '제출'}
           </button>
         </>
       )}
