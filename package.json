@@ -1,0 +1,17 @@
+{
+  "name": "neo4j-cyper-game",
+  "version": "1.0.0",
+  "description": "이 저장소는 이전 \"Neo4j Cypher Quest\" 게임 페이지를 전부 제거하고, 단일 HTML로 동작하는 새 웹페이지를 구성합니다. 가볍게 호스팅할 수 있고, 브랜딩/카피를 한 파일에서 바로 수정할 수 있습니다.",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "jsdom": "^27.3.0",
+    "vitest": "^4.0.15"
+  }
+}

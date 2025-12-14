@@ -520,6 +520,7 @@
 
         const summary = [name || '익명', role, message].join(' · ');
         localStorage.setItem('neo4j-cypher-idea', summary);
+        document.getElementById('message').value = '';
         feedback.textContent = '로컬에 메모를 저장했습니다. 언제든 수정하거나 지워도 됩니다.';
         feedback.style.color = '#a5f3fc';
       });
