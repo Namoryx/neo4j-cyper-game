@@ -19,6 +19,14 @@ A Vite + React mini-game for practicing Neo4j Cypher through story and practice 
 ## Deployment (GitHub Pages)
 GitHub Pages must serve the built `dist` output, not the raw `index.html` that points to `/src/main.jsx`. The repo is configured for a project page at `/neo4j-cyper-game/` via Vite's `base` setting.
 
+### Automated (recommended)
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that builds and publishes the `dist` folder to GitHub Pages on every push to `main` (or manual `Run workflow`).
+
+1. In GitHub: **Settings → Pages**
+   - Source: **GitHub Actions**
+2. Push to `main` or trigger the workflow. It will build with `npm run build` and deploy the artifact automatically.
+
+### Manual (fallback)
 1. Build the project
    ```bash
    npm run build
