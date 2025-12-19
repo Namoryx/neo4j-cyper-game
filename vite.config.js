@@ -5,7 +5,18 @@ export default defineConfig({
   plugins: [react()],
   base: '/neo4j-cyper-game/',
   build: {
-    outDir: 'docs',
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/app.js',
+        chunkFileNames: 'assets/chunk-[hash].js',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+            return 'assets/app.css';
+          }
+          return 'assets/[name]-[hash][extname]';
+        }
+      }
+    }
   },
   test: {
     environment: 'jsdom',
