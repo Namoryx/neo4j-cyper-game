@@ -13,7 +13,7 @@ function normalizeList(values = []) {
 
 export function gradeCypher(question, rows) {
   const expected = normalizeList(question?.expected || []);
-  const received = normalizeList(extractValues(rows));
+  const received = normalizeList(extractValues(rows, question?.returnKey));
 
   if (question?.ordered) {
     const isCorrect = expected.length === received.length && expected.every((val, idx) => val === received[idx]);

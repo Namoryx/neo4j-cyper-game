@@ -69,6 +69,7 @@
     ],
     "explanation": "기본 반환문을 입력하는 연습 문제입니다.",
     "expected": ["1"],
+    "returnKey": "one",
     "ordered": true
   },
   {

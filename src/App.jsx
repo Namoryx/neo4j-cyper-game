@@ -5,6 +5,8 @@ import ResultPanel from './components/ResultPanel.jsx';
 import DiagnosticsPanel from './components/DiagnosticsPanel.jsx';
 import ModeSwitcher from './components/ModeSwitcher.jsx';
 import FilterPanel from './components/FilterPanel.jsx';
+import Playground from './components/Playground.jsx';
+import DataBrowser from './components/DataBrowser.jsx';
 import questions from './data/questions.json';
 import { countPracticeStats, loadProgress, recordAttempt, updateStoryIndex } from './utils/progress.js';
 
@@ -14,12 +16,14 @@ function App() {
   const [rows, setRows] = useState([]);
   const [impact, setImpact] = useState(null);
   const [mode, setMode] = useState('story');
+  const [activeTab, setActiveTab] = useState('quiz');
   const [filters, setFilters] = useState({ domain: 'all', concepts: [] });
   const [filterDraft, setFilterDraft] = useState({ domain: 'all', concepts: [] });
   const [onlyWeak, setOnlyWeak] = useState(false);
   const [progress, setProgress] = useState({ storyIndex: 0, records: {} });
   const [initialStoryIndex, setInitialStoryIndex] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [lastRun, setLastRun] = useState(null);
 
   useEffect(() => {
     const loaded = loadProgress();
@@ -83,67 +87,115 @@ function App() {
     }
   }, [mode, progress.storyIndex]);
 
+  useEffect(() => {
+    setRows([]);
+    setLastRun(null);
+  }, [activeTab]);
+
   return (
     <div className={`app ${impact ? `app--impact-${impact}` : ''}`}>
       <div className="app-shell">
         <header className="app-header">
           <div className="app-header__top">
             <h1 className="app-title">쿼카와 함께하는 Cypher 게임</h1>
-            <ModeSwitcher mode={mode} onChange={setMode} />
+            {activeTab === 'quiz' ? <ModeSwitcher mode={mode} onChange={setMode} /> : null}
           </div>
           <div className="app-header__progress">
-            {mode === 'story' ? (
-              <p>
-                현재 <strong>{activeIndex + 1}</strong> / 총 <strong>{questions.length}</strong>
-              </p>
+            {activeTab === 'quiz' ? (
+              mode === 'story' ? (
+                <p>
+                  현재 <strong>{activeIndex + 1}</strong> / 총 <strong>{questions.length}</strong>
+                </p>
+              ) : (
+                <p>
+                  오늘 연습: <strong>{practiceStats.attempts}</strong>회 · 최근 정답{' '}
+                  <strong>{practiceStats.correct}</strong>
+                </p>
+              )
             ) : (
-              <p>
-                오늘 연습: <strong>{practiceStats.attempts}</strong>회 · 최근 정답{' '}
-                <strong>{practiceStats.correct}</strong>
-              </p>
+              <p className="muted">읽기 전용 데이터 탐색 모드</p>
             )}
+          </div>
+          <div className="app-tabs" role="tablist" aria-label="앱 탭">
+            <button
+              type="button"
+              className={`chip ${activeTab === 'quiz' ? 'chip--active' : ''}`}
+              role="tab"
+              aria-selected={activeTab === 'quiz'}
+              onClick={() => setActiveTab('quiz')}
+            >
+              Quiz
+            </button>
+            <button
+              type="button"
+              className={`chip ${activeTab === 'playground' ? 'chip--active' : ''}`}
+              role="tab"
+              aria-selected={activeTab === 'playground'}
+              onClick={() => setActiveTab('playground')}
+            >
+              Playground
+            </button>
+            <button
+              type="button"
+              className={`chip ${activeTab === 'browse' ? 'chip--active' : ''}`}
+              role="tab"
+              aria-selected={activeTab === 'browse'}
+              onClick={() => setActiveTab('browse')}
+            >
+              Browse Data
+            </button>
           </div>
         </header>
         <main className="app-main">
           <section className="app-layout">
             <QuokkaCharacter speech={speech} mood={mood} />
             <div className="app-panels">
-              <FilterPanel
-                domains={domains}
-                concepts={concepts}
-                draftDomain={filterDraft.domain}
-                draftConcepts={filterDraft.concepts}
-                onDraftDomainChange={(value) => setFilterDraft((prev) => ({ ...prev, domain: value }))}
-                onDraftConceptToggle={(concept) =>
-                  setFilterDraft((prev) => {
-                    const has = prev.concepts.includes(concept);
-                    return {
-                      ...prev,
-                      concepts: has
-                        ? prev.concepts.filter((c) => c !== concept)
-                        : [...prev.concepts, concept],
-                    };
-                  })
-                }
-                onApply={handleFilterApply}
-                onlyWeak={onlyWeak}
-                onWeakToggle={setOnlyWeak}
-                disabled={mode !== 'practice'}
-              />
-              <Quiz
-                key={`${mode}-${activeFilters.domain}-${activeFilters.concepts.join(',')}-${onlyWeak}-${activeQuestions.length}`}
-                questions={activeQuestions}
-                startingIndex={mode === 'story' ? initialStoryIndex : 0}
-                onSpeechChange={setSpeech}
-                onMoodChange={setMood}
-                onImpact={setImpact}
-                onResultsChange={setRows}
-                onProgressUpdate={handleProgressUpdate}
-                onIndexPersist={handleIndexPersist}
-                onIndexChange={setActiveIndex}
-              />
+              {activeTab === 'quiz' ? (
+                <>
+                  <FilterPanel
+                    domains={domains}
+                    concepts={concepts}
+                    draftDomain={filterDraft.domain}
+                    draftConcepts={filterDraft.concepts}
+                    onDraftDomainChange={(value) => setFilterDraft((prev) => ({ ...prev, domain: value }))}
+                    onDraftConceptToggle={(concept) =>
+                      setFilterDraft((prev) => {
+                        const has = prev.concepts.includes(concept);
+                        return {
+                          ...prev,
+                          concepts: has
+                            ? prev.concepts.filter((c) => c !== concept)
+                            : [...prev.concepts, concept],
+                        };
+                      })
+                    }
+                    onApply={handleFilterApply}
+                    onlyWeak={onlyWeak}
+                    onWeakToggle={setOnlyWeak}
+                    disabled={mode !== 'practice'}
+                  />
+                  <Quiz
+                    key={`${mode}-${activeFilters.domain}-${activeFilters.concepts.join(',')}-${onlyWeak}-${activeQuestions.length}`}
+                    questions={activeQuestions}
+                    startingIndex={mode === 'story' ? initialStoryIndex : 0}
+                    onSpeechChange={setSpeech}
+                    onMoodChange={setMood}
+                    onImpact={setImpact}
+                    onResultsChange={setRows}
+                    onProgressUpdate={handleProgressUpdate}
+                    onIndexPersist={handleIndexPersist}
+                    onIndexChange={setActiveIndex}
+                  />
+                </>
+              ) : null}
+              {activeTab === 'playground' ? (
+                <Playground onResultsChange={setRows} onLastRun={setLastRun} />
+              ) : null}
+              {activeTab === 'browse' ? (
+                <DataBrowser onResultsChange={setRows} onLastRun={setLastRun} />
+              ) : null}
               <ResultPanel rows={rows} />
-              <DiagnosticsPanel />
+              <DiagnosticsPanel lastRun={lastRun} />
             </div>
           </section>
         </main>
