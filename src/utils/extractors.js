@@ -1,7 +1,8 @@
 const preferredKeys = ['itemId', 'userId', 'id', 'name'];
 
-function findPreferredValue(value) {
+function extractFromValue(value, returnKey) {
   if (value && typeof value === 'object') {
+    if (returnKey && value[returnKey] !== undefined) return value[returnKey];
     for (const key of preferredKeys) {
       if (value[key] !== undefined) return value[key];
     }
@@ -9,21 +10,25 @@ function findPreferredValue(value) {
   return value;
 }
 
-export function extractValues(rows = []) {
+export function extractValues(rows = [], returnKey) {
   if (!rows || !rows.length) return [];
 
   return rows.map((row) => {
     if (!row || typeof row !== 'object') return String(row);
 
+    if (returnKey && row[returnKey] !== undefined) {
+      return String(extractFromValue(row[returnKey], returnKey));
+    }
+
     for (const key of preferredKeys) {
-      if (row[key] !== undefined) return String(findPreferredValue(row[key]));
+      if (row[key] !== undefined) return String(extractFromValue(row[key], returnKey));
     }
 
     const columns = Object.keys(row);
     if (!columns.length) return '';
 
     const value = row[columns[0]];
-    const preferred = findPreferredValue(value);
+    const preferred = extractFromValue(value, returnKey);
     return String(preferred);
   });
 }
