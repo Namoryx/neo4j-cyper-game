@@ -82,4 +82,14 @@ describe('App scaffold', () => {
 
     expect(await screen.findByText(/정답/)).toBeInTheDocument();
   });
+
+  it('switches to Playground and Browse Data tabs', async () => {
+    render(<App />);
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Playground' }));
+    expect(screen.getByTestId('playground-textarea')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Browse Data' }));
+    expect(screen.getByTestId('browser-query-list')).toBeInTheDocument();
+  });
 });
