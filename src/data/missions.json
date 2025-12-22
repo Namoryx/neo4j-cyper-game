@@ -1,0 +1,44 @@
+[
+  {
+    "id": "mission-core-3",
+    "text": "core 트랙 문제 3개 풀기",
+    "type": "attempts",
+    "track": "core",
+    "target": 3
+  },
+  {
+    "id": "mission-aggregation-2",
+    "text": "aggregation 트랙 문제 2개 정답",
+    "type": "corrects",
+    "track": "aggregation",
+    "target": 2
+  },
+  {
+    "id": "mission-paths-2",
+    "text": "paths 트랙 문제 2개 풀기",
+    "type": "attempts",
+    "track": "paths",
+    "target": 2
+  },
+  {
+    "id": "mission-cypher-1",
+    "text": "cypher 주관식 1개 성공",
+    "type": "corrects",
+    "questionType": "cypher",
+    "target": 1
+  },
+  {
+    "id": "mission-expert-1",
+    "text": "expert 난이도 문제 1개 풀기",
+    "type": "attempts",
+    "difficulty": "expert",
+    "target": 1
+  },
+  {
+    "id": "mission-reco-2",
+    "text": "recommendation 트랙 문제 2개 정답",
+    "type": "corrects",
+    "track": "recommendation",
+    "target": 2
+  }
+]

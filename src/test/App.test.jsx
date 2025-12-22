@@ -83,13 +83,24 @@ describe('App scaffold', () => {
     expect(await screen.findByText(/정답/)).toBeInTheDocument();
   });
 
-  it('switches to Playground and Browse Data tabs', async () => {
+  it('switches to Playground and Browse tabs', async () => {
     render(<App />);
 
     await userEvent.click(screen.getByRole('tab', { name: 'Playground' }));
     expect(screen.getByTestId('playground-textarea')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('tab', { name: 'Browse Data' }));
+    await userEvent.click(screen.getByRole('tab', { name: 'Browse' }));
     expect(screen.getByTestId('browser-query-list')).toBeInTheDocument();
+  });
+
+  it('renders curriculum tracks and mission banner', async () => {
+    render(<App />);
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Curriculum' }));
+    expect(screen.getByTestId('curriculum-track-list')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Quiz' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Practice' }));
+    expect(screen.getByText('오늘의 미션')).toBeInTheDocument();
   });
 });

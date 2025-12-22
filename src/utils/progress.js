@@ -1,20 +1,55 @@
-const STORAGE_KEY = 'quokkaCypherProgress:v1';
+const STORAGE_KEY = 'quokkaCypherProgress:v2';
+const LEGACY_STORAGE_KEY = 'quokkaCypherProgress:v1';
 
 const defaultProgress = { storyIndex: 0, records: {} };
+
+function migrateLegacyProgress(legacy) {
+  if (!legacy?.records) return { ...defaultProgress };
+
+  const migratedRecords = Object.entries(legacy.records).reduce((acc, [questionId, record]) => {
+    const attempts = record?.attempts ?? 0;
+    const lastWasCorrect = Boolean(record?.lastIsCorrect);
+    acc[questionId] = {
+      attempts,
+      corrects: lastWasCorrect ? 1 : 0,
+      lastWasCorrect,
+      lastAttemptAt: record?.lastAttemptAt ?? null,
+      avgMs: null,
+    };
+    return acc;
+  }, {});
+
+  return {
+    storyIndex: legacy?.storyIndex ?? 0,
+    records: migratedRecords,
+  };
+}
 
 export function loadProgress() {
   if (typeof localStorage === 'undefined') return { ...defaultProgress };
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...defaultProgress };
-    const parsed = JSON.parse(raw);
-    return {
-      storyIndex: parsed?.storyIndex ?? 0,
-      records: parsed?.records ?? {},
-    };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        storyIndex: parsed?.storyIndex ?? 0,
+        records: parsed?.records ?? {},
+      };
+    }
   } catch (error) {
     console.warn('Failed to load progress', error);
+  }
+
+  try {
+    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!legacyRaw) return { ...defaultProgress };
+    const legacyParsed = JSON.parse(legacyRaw);
+    const migrated = migrateLegacyProgress(legacyParsed);
+    saveProgress(migrated);
+    return migrated;
+  } catch (error) {
+    console.warn('Failed to migrate legacy progress', error);
     return { ...defaultProgress };
   }
 }
@@ -28,16 +63,31 @@ export function saveProgress(progress) {
   }
 }
 
-export function recordAttempt(prevProgress, { questionId, isCorrect, timestamp = Date.now() }) {
+export function recordAttempt(prevProgress, { questionId, isCorrect, timestamp = Date.now(), elapsedMs }) {
   if (!questionId) return prevProgress ?? { ...defaultProgress };
 
   const base = prevProgress ?? { ...defaultProgress };
-  const current = base.records?.[questionId] ?? { attempts: 0, lastIsCorrect: false, lastAttemptAt: null };
+  const current = base.records?.[questionId] ?? {
+    attempts: 0,
+    corrects: 0,
+    lastWasCorrect: false,
+    lastAttemptAt: null,
+    avgMs: null,
+  };
+
+  const nextAttempts = current.attempts + 1;
+  const nextCorrects = current.corrects + (isCorrect ? 1 : 0);
+  const nextAvgMs =
+    typeof elapsedMs === 'number' && Number.isFinite(elapsedMs)
+      ? Math.round(((current.avgMs ?? 0) * current.attempts + elapsedMs) / nextAttempts)
+      : current.avgMs ?? null;
 
   const updatedRecord = {
-    attempts: current.attempts + 1,
-    lastIsCorrect: Boolean(isCorrect),
+    attempts: nextAttempts,
+    corrects: nextCorrects,
+    lastWasCorrect: Boolean(isCorrect),
     lastAttemptAt: timestamp,
+    avgMs: nextAvgMs,
   };
 
   const nextProgress = {
@@ -64,6 +114,21 @@ export function countPracticeStats(records = {}) {
   if (!values.length) return { attempts: 0, correct: 0 };
 
   const attempts = values.reduce((sum, rec) => sum + (rec?.attempts ?? 0), 0);
-  const correct = values.reduce((sum, rec) => sum + (rec?.lastIsCorrect ? 1 : 0), 0);
+  const correct = values.reduce((sum, rec) => sum + (rec?.corrects ?? 0), 0);
   return { attempts, correct };
+}
+
+export function weakScore(questionId, records = {}, now = Date.now()) {
+  if (!questionId) return 0;
+  const record = records?.[questionId];
+  if (!record || !record.attempts) return 0;
+
+  const accuracy = record.corrects ? record.corrects / record.attempts : 0;
+  const missPenalty = record.lastWasCorrect ? 0 : 0.5;
+  const accuracyPenalty = 1 - accuracy;
+  const daysSince =
+    record.lastAttemptAt ? Math.min((now - record.lastAttemptAt) / (1000 * 60 * 60 * 24), 30) : 30;
+  const timeBonus = Math.min(daysSince / 7, 1) * 0.2;
+
+  return Number((accuracyPenalty + missPenalty + timeBonus).toFixed(3));
 }

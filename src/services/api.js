@@ -2,7 +2,7 @@ export async function runCypher(query, params = {}) {
   const res = await fetch('https://neo4j-runner.neo4j-namoryx.workers.dev/run', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, params })
+    body: JSON.stringify({ query, cypher: query, params })
   });
 
   let json;
