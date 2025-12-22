@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { runCypher } from '../services/api.js';
 
-function DiagnosticsPanel() {
+function DiagnosticsPanel({ lastRun }) {
   const [open, setOpen] = useState(true);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,6 +35,15 @@ function DiagnosticsPanel() {
           <button type="button" className="secondary-button" disabled={loading} onClick={handleTest}>
             {loading ? '확인 중...' : 'RETURN 1 실행'}
           </button>
+          {lastRun ? (
+            <div className="diagnostics-last-run">
+              <p className="muted">최근 실행 · {lastRun.source === 'browser' ? 'Browse' : 'Playground'}</p>
+              <p className="diagnostics-query">{lastRun.query}</p>
+              <p className="muted">
+                {lastRun.ms}ms · rows {lastRun.rowCount}
+              </p>
+            </div>
+          ) : null}
           {status ? (
             <p className={status.ok ? 'status success' : 'status error'}>{status.message}</p>
           ) : (
