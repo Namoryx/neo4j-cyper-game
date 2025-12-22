@@ -23,6 +23,7 @@ function Quiz({
   const [isCorrect, setIsCorrect] = useState(null);
   const [lastError, setLastError] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [questionStart, setQuestionStart] = useState(Date.now());
   const initializedRef = useRef(false);
 
   const currentQuestion = questions?.[index];
@@ -76,6 +77,11 @@ function Quiz({
     }
   }, [index, questions]);
 
+  useEffect(() => {
+    if (!currentQuestion) return;
+    setQuestionStart(Date.now());
+  }, [currentQuestion?.id]);
+
   const resetForNextQuestion = (nextIndex) => {
     setIndex(nextIndex);
     setSelectedOption(null);
@@ -83,6 +89,7 @@ function Quiz({
     setIsCorrect(null);
     setLastError(null);
     setPhase('answering');
+    setQuestionStart(Date.now());
     onResultsChange?.([]);
     onIndexChange?.(nextIndex);
   };
@@ -97,11 +104,12 @@ function Quiz({
         return;
       }
 
+      const elapsedMs = Date.now() - questionStart;
       const { isCorrect: mcqCorrect } = gradeMcq(currentQuestion, selectedOption);
       setIsCorrect(mcqCorrect);
       setPhase('feedback');
       onResultsChange?.([]);
-      onProgressUpdate?.({ questionId: currentQuestion.id, isCorrect: mcqCorrect });
+      onProgressUpdate?.({ questionId: currentQuestion.id, isCorrect: mcqCorrect, elapsedMs });
       return;
     }
 
@@ -116,9 +124,10 @@ function Quiz({
       const rows = toRows(response);
       onResultsChange?.(rows?.slice(0, 10) ?? []);
       const { isCorrect: cypherCorrect } = gradeCypher(currentQuestion, rows);
+      const elapsedMs = Date.now() - questionStart;
       setIsCorrect(cypherCorrect);
       setPhase('feedback');
-      onProgressUpdate?.({ questionId: currentQuestion.id, isCorrect: cypherCorrect });
+      onProgressUpdate?.({ questionId: currentQuestion.id, isCorrect: cypherCorrect, elapsedMs });
     } catch (error) {
       setLastError(error?.message || '실행 중 오류가 발생했습니다.');
       onResultsChange?.([]);
