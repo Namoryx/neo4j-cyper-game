@@ -7,23 +7,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module">
-      const isLocal =
-        location.hostname === 'localhost' ||
-        location.hostname === '127.0.0.1' ||
-        location.hostname === '0.0.0.0';
-      const repoBase = location.pathname.split('/')[1];
-      const base = repoBase ? `/${repoBase}/` : '/';
-      const scriptSrc = isLocal ? '/src/main.jsx' : `${base}assets/app.js`;
-
-      if (!isLocal) {
-        const stylesheet = document.createElement('link');
-        stylesheet.rel = 'stylesheet';
-        stylesheet.href = `${base}assets/app.css`;
-        document.head.appendChild(stylesheet);
-      }
-
-      import(scriptSrc);
-    </script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
