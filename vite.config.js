@@ -1,9 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
-  plugins: [react()],
-  base: '/neo4j-cyper-game/',
+const DEFAULT_REPO_NAME = 'neo4j-cyper-game';
+
+export default defineConfig(({ command }) => {
+  const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || DEFAULT_REPO_NAME;
+  // GitHub Pages는 repo 하위 경로를 사용하므로, 빌드 시 base를 자동으로 맞춥니다.
+  const base = command === 'build' ? `/${repoName}/` : '/';
+
+  return {
+    plugins: [react()],
+    base,
   build: {
     rollupOptions: {
       output: {
@@ -24,4 +31,5 @@ export default defineConfig({
     globals: true,
     include: ['src/test/**/*.{test,spec}.{js,jsx,ts,tsx}']
   }
+  };
 });

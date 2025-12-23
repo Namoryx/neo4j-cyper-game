@@ -12,18 +12,30 @@
         location.hostname === 'localhost' ||
         location.hostname === '127.0.0.1' ||
         location.hostname === '0.0.0.0';
-      const repoBase = location.pathname.split('/')[1];
-      const base = repoBase ? `/${repoBase}/` : '/';
+      const pathParts = location.pathname.split('/').filter(Boolean);
+      const base = pathParts.length ? `/${pathParts[0]}/` : '/';
       const scriptSrc = isLocal ? '/src/main.jsx' : `${base}assets/app.js`;
+      const styleHref = isLocal ? null : `${base}assets/app.css`;
 
-      if (!isLocal) {
+      if (styleHref) {
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = `${base}assets/app.css`;
+        stylesheet.href = styleHref;
         document.head.appendChild(stylesheet);
       }
 
-      import(scriptSrc);
+      const loadScript = (src) => import(/* @vite-ignore */ src);
+
+      if (isLocal) {
+        loadScript(scriptSrc);
+      } else {
+        fetch(scriptSrc, { method: 'HEAD' })
+          .then((res) => {
+            if (!res.ok) throw new Error('missing bundle');
+            return loadScript(scriptSrc);
+          })
+          .catch(() => loadScript('/src/main.jsx'));
+      }
     </script>
   </body>
 </html>

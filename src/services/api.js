@@ -1,8 +1,11 @@
 export async function runCypher(query, params = {}) {
+  if (!query) {
+    throw new Error('Cypher가 비어 있습니다.');
+  }
   const res = await fetch('https://neo4j-runner.neo4j-namoryx.workers.dev/run', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, params })
+    body: JSON.stringify({ cypher: query, params })
   });
 
   let json;

@@ -4,7 +4,10 @@
     "type": "mcq",
     "difficulty": "easy",
     "domain": "general",
+    "track": "core",
+    "lesson": "L01",
     "concepts": ["pattern", "direction"],
+    "estimatedSec": 40,
     "question": "다음 MATCH 패턴에서 방향성이 의미하는 것은 무엇인가요?",
     "hint": [
       "화살표는 관계의 방향을 나타냅니다",
@@ -23,7 +26,10 @@
     "type": "mcq",
     "difficulty": "medium",
     "domain": "general",
+    "track": "core",
+    "lesson": "L01",
     "concepts": ["index", "performance"],
+    "estimatedSec": 60,
     "question": "Neo4j에서 특정 레이블의 노드가 존재하는지 가장 빠르게 확인하려면 어떤 인덱스를 사용하나요?",
     "hint": [
       "레이블과 속성 조합을 생각해 보세요",
@@ -42,7 +48,10 @@
     "type": "mcq",
     "difficulty": "hard",
     "domain": "general",
+    "track": "paths",
+    "lesson": "L01",
     "concepts": ["path", "variable-length"],
+    "estimatedSec": 90,
     "question": "경로 길이를 변수로 지정하는 MATCH (a)-[r:KNOWS*1..3]->(b)에서 *1..3은 무엇을 의미하나요?",
     "hint": [
       "반복된 관계의 최소/최대 길이를 의미합니다",
@@ -61,7 +70,10 @@
     "type": "cypher",
     "difficulty": "easy",
     "domain": "general",
+    "track": "core",
+    "lesson": "L01",
     "concepts": ["return", "scalar"],
+    "estimatedSec": 45,
     "question": "\"RETURN 1 AS one\" 결과를 반환하는 Cypher를 입력하세요.",
     "hint": [
       "RETURN 1 AS one 을 그대로 입력해 보세요",
@@ -69,14 +81,409 @@
     ],
     "explanation": "기본 반환문을 입력하는 연습 문제입니다.",
     "expected": ["1"],
+    "returnKey": "one",
     "ordered": true
   },
   {
     "id": "cypher-002",
     "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L01",
+    "concepts": ["unwind", "list"],
+    "estimatedSec": 50,
+    "question": "[1,2,3]을 UNWIND로 펼쳐서 숫자를 반환하는 Cypher를 작성하세요.",
+    "hint": [
+      "UNWIND [1,2,3] AS x",
+      "RETURN x로 값을 확인합니다"
+    ],
+    "explanation": "UNWIND는 리스트를 행으로 펼칩니다.",
+    "expected": ["1", "2", "3"],
+    "returnKey": "x",
+    "ordered": true
+  },
+  {
+    "id": "mcq-004",
+    "type": "mcq",
+    "difficulty": "easy",
+    "domain": "shopping",
+    "track": "core",
+    "lesson": "L02",
+    "concepts": ["filter", "match"],
+    "estimatedSec": 45,
+    "question": "상품 노드(Product)에서 가격이 100 이상인 상품을 찾으려면 WHERE 절에 어떤 비교 연산을 사용하나요?",
+    "hint": [
+      ">= 연산을 떠올려 보세요",
+      "숫자 비교는 정수/실수를 그대로 비교합니다"
+    ],
+    "explanation": "가격이 특정 값 이상인 조건은 WHERE price >= 100 형태로 작성합니다.",
+    "options": [
+      "price >= 100",
+      "price => 100",
+      "price <> 100"
+    ],
+    "answer": "price >= 100"
+  },
+  {
+    "id": "mcq-005",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "shopping",
+    "track": "aggregation",
+    "lesson": "L01",
+    "concepts": ["aggregation", "order"],
+    "estimatedSec": 70,
+    "question": "장바구니 총액을 계산할 때 SUM을 사용한다면, 결과를 높은 금액 순으로 정렬하려면 어떤 절을 추가해야 하나요?",
+    "hint": [
+      "집계 결과는 ORDER BY로 정렬합니다",
+      "내림차순은 DESC 키워드를 사용합니다"
+    ],
+    "explanation": "SUM으로 합산한 뒤 ORDER BY total DESC 형태로 정렬합니다.",
+    "options": [
+      "ORDER BY total DESC",
+      "SORT BY total ASC",
+      "GROUP BY total DESC"
+    ],
+    "answer": "ORDER BY total DESC"
+  },
+  {
+    "id": "mcq-006",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "general",
+    "track": "modeling",
+    "lesson": "L02",
+    "concepts": ["update", "merge"],
+    "estimatedSec": 70,
+    "question": "MERGE (u:User {id: $id}) ON CREATE SET u.createdAt = timestamp() ON MATCH SET u.lastSeen = timestamp() 는 어떤 동작을 하나요?",
+    "hint": [
+      "존재하면 갱신, 없으면 생성",
+      "MERGE는 UPSERT 같은 역할입니다"
+    ],
+    "explanation": "MERGE는 노드를 찾아보고 없으면 생성, 있으면 ON MATCH 절을 실행합니다.",
+    "options": [
+      "항상 새 User 노드를 생성한다",
+      "존재하면 lastSeen을, 없으면 createdAt을 설정한다",
+      "아무 동작도 하지 않는다"
+    ],
+    "answer": "존재하면 lastSeen을, 없으면 createdAt을 설정한다"
+  },
+  {
+    "id": "cypher-003",
+    "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L02",
+    "concepts": ["return", "string"],
+    "estimatedSec": 45,
+    "question": "문자열 'neo4j'를 name 컬럼으로 반환하는 Cypher를 작성하세요.",
+    "hint": [
+      "RETURN 'neo4j' AS name",
+      "컬럼명은 name으로 지정합니다"
+    ],
+    "explanation": "리터럴 문자열을 반환하는 기본 문제입니다.",
+    "expected": ["neo4j"],
+    "returnKey": "name",
+    "ordered": true
+  },
+  {
+    "id": "cypher-004",
+    "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L02",
+    "concepts": ["list", "size"],
+    "estimatedSec": 50,
+    "question": "[1,2,3,4]의 길이를 count 컬럼으로 반환하는 Cypher를 작성하세요.",
+    "hint": [
+      "WITH [1,2,3,4] AS nums",
+      "RETURN size(nums) AS count"
+    ],
+    "explanation": "리스트의 길이를 size()로 구합니다.",
+    "expected": ["4"],
+    "returnKey": "count",
+    "ordered": true
+  },
+  {
+    "id": "mcq-007",
+    "type": "mcq",
+    "difficulty": "hard",
+    "domain": "knowledge",
+    "track": "knowledge",
+    "lesson": "L01",
+    "concepts": ["graph-model", "labels"],
+    "estimatedSec": 90,
+    "question": "지식 그래프에서 동일한 엔티티에 여러 레이블을 부여하는 이유는 무엇인가요?",
+    "hint": [
+      "검색 및 인덱싱을 유연하게 만들기 위해",
+      "엔티티의 다양한 역할을 표현할 수 있습니다"
+    ],
+    "explanation": "다중 레이블은 검색 최적화와 다중 역할 표현 모두에 도움이 됩니다.",
+    "options": [
+      "엔티티를 중복 생성하지 않기 위해",
+      "다양한 카테고리나 역할을 함께 표현하고 인덱싱 유연성을 높이기 위해",
+      "쿼리 속도를 느리게 만들기 위해"
+    ],
+    "answer": "다양한 카테고리나 역할을 함께 표현하고 인덱싱 유연성을 높이기 위해"
+  },
+  {
+    "id": "mcq-008",
+    "type": "mcq",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L01",
+    "concepts": ["return", "alias"],
+    "estimatedSec": 45,
+    "question": "RETURN a.name AS userName 과 같은 구문에서 AS의 역할은 무엇인가요?",
+    "hint": [
+      "AS는 별칭을 지정합니다",
+      "컬럼명을 읽기 쉽게 바꿀 때 사용합니다"
+    ],
+    "explanation": "AS는 반환 컬럼의 별칭을 지정합니다.",
+    "options": [
+      "새 노드를 생성한다",
+      "반환 컬럼 이름을 userName으로 지정한다",
+      "쿼리를 종료한다"
+    ],
+    "answer": "반환 컬럼 이름을 userName으로 지정한다"
+  },
+  {
+    "id": "cypher-005",
+    "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L03",
+    "concepts": ["math", "order"],
+    "estimatedSec": 60,
+    "question": "range(1,3)을 UNWIND로 펼쳐 제곱값을 squared 컬럼으로 반환하세요.",
+    "hint": [
+      "UNWIND range(1,3) AS n",
+      "RETURN n * n AS squared"
+    ],
+    "explanation": "range와 UNWIND를 조합해 산술 결과를 반환합니다.",
+    "expected": ["1", "4", "9"],
+    "returnKey": "squared",
+    "ordered": true
+  },
+  {
+    "id": "mcq-009",
+    "type": "mcq",
     "difficulty": "medium",
     "domain": "social",
+    "track": "core",
+    "lesson": "L02",
+    "concepts": ["filter", "distinct"],
+    "estimatedSec": 60,
+    "question": "중복된 관계 결과를 제거하려면 어떤 키워드를 사용하나요?",
+    "hint": [
+      "SQL과 비슷한 키워드",
+      "반환 컬럼 앞에 위치합니다"
+    ],
+    "explanation": "DISTINCT는 중복 행을 제거하는 키워드입니다.",
+    "options": [
+      "UNIQUE",
+      "DISTINCT",
+      "REMOVE"
+    ],
+    "answer": "DISTINCT"
+  },
+  {
+    "id": "cypher-006",
+    "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L02",
+    "concepts": ["map", "return"],
+    "estimatedSec": 55,
+    "question": "{itemId: 'I1'} 맵에서 itemId를 추출해 반환하는 Cypher를 작성하세요.",
+    "hint": [
+      "WITH {itemId: 'I1'} AS item",
+      "RETURN item.itemId AS itemId"
+    ],
+    "explanation": "맵 접근은 점 표기법을 사용합니다.",
+    "expected": ["I1"],
+    "returnKey": "itemId",
+    "ordered": true
+  },
+  {
+    "id": "mcq-010",
+    "type": "mcq",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "aggregation",
+    "lesson": "L01",
+    "concepts": ["aggregation", "count"],
+    "estimatedSec": 50,
+    "question": "모든 노드 수를 세고자 할 때 사용하는 집계 함수는 무엇인가요?",
+    "hint": [
+      "COUNT(*) 형태입니다",
+      "행 개수를 셉니다"
+    ],
+    "explanation": "count(*)는 전체 행 수를 집계합니다.",
+    "options": [
+      "SUM(*)",
+      "COUNT(*)",
+      "COLLECT(*)"
+    ],
+    "answer": "COUNT(*)"
+  },
+  {
+    "id": "cypher-007",
+    "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L03",
+    "concepts": ["unwind", "string"],
+    "estimatedSec": 60,
+    "question": "['A','B']를 UNWIND로 펼쳐 letter 컬럼으로 반환하세요.",
+    "hint": [
+      "UNWIND ['A','B'] AS letter",
+      "RETURN letter"
+    ],
+    "explanation": "문자열 리스트를 UNWIND로 펼칩니다.",
+    "expected": ["A", "B"],
+    "returnKey": "letter",
+    "ordered": true
+  },
+  {
+    "id": "cypher-008",
+    "type": "cypher",
+    "difficulty": "medium",
+    "domain": "general",
+    "track": "aggregation",
+    "lesson": "L02",
+    "concepts": ["order", "unwind"],
+    "estimatedSec": 70,
+    "question": "[3,1,2]를 정렬한 결과를 n 컬럼으로 반환하는 Cypher를 작성하세요.",
+    "hint": [
+      "UNWIND [3,1,2] AS n",
+      "ORDER BY n"
+    ],
+    "explanation": "ORDER BY로 숫자를 정렬합니다.",
+    "expected": ["1", "2", "3"],
+    "returnKey": "n",
+    "ordered": true
+  },
+  {
+    "id": "mcq-011",
+    "type": "mcq",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L02",
+    "concepts": ["where", "boolean"],
+    "estimatedSec": 45,
+    "question": "WHERE 절에서 논리 AND를 표현하려면 어떤 키워드를 사용하나요?",
+    "hint": [
+      "SQL과 동일한 키워드",
+      "조건을 모두 만족할 때 사용합니다"
+    ],
+    "explanation": "WHERE a AND b 형태로 조건을 연결합니다.",
+    "options": [
+      "PLUS",
+      "AND",
+      "WITH"
+    ],
+    "answer": "AND"
+  },
+  {
+    "id": "cypher-009",
+    "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L03",
+    "concepts": ["boolean", "return"],
+    "estimatedSec": 55,
+    "question": "10이 5보다 큰지 여부를 ok 컬럼으로 반환하는 Cypher를 작성하세요.",
+    "hint": [
+      "RETURN 10 > 5 AS ok",
+      "불리언 결과를 확인합니다"
+    ],
+    "explanation": "비교 연산의 결과는 true/false입니다.",
+    "expected": ["true"],
+    "returnKey": "ok",
+    "ordered": true
+  },
+  {
+    "id": "mcq-012",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "social",
+    "track": "modeling",
+    "lesson": "L01",
+    "concepts": ["relationship", "types"],
+    "estimatedSec": 70,
+    "question": "관계 타입을 가져올 때 사용하는 함수는 무엇인가요?",
+    "hint": [
+      "type(r) 형태를 떠올려 보세요",
+      "관계 변수 r을 입력합니다"
+    ],
+    "explanation": "type(r)은 관계 타입 문자열을 반환합니다.",
+    "options": [
+      "labels(r)",
+      "type(r)",
+      "keys(r)"
+    ],
+    "answer": "type(r)"
+  },
+  {
+    "id": "cypher-010",
+    "type": "cypher",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L02",
+    "concepts": ["unwind", "map"],
+    "estimatedSec": 60,
+    "question": "[{userId:'U1'},{userId:'U2'}]에서 userId를 반환하는 Cypher를 작성하세요.",
+    "hint": [
+      "UNWIND 리스트 AS u",
+      "RETURN u.userId AS userId"
+    ],
+    "explanation": "UNWIND는 맵 리스트를 행으로 펼칩니다.",
+    "expected": ["U1", "U2"],
+    "returnKey": "userId",
+    "ordered": true
+  },
+  {
+    "id": "mcq-013",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "shopping",
+    "track": "aggregation",
+    "lesson": "L02",
+    "concepts": ["collect", "group"],
+    "estimatedSec": 75,
+    "question": "여러 값을 리스트로 모으려면 어떤 집계 함수를 사용하나요?",
+    "hint": [
+      "collect()를 사용합니다",
+      "RETURN collect(x) 형태입니다"
+    ],
+    "explanation": "collect()는 값을 리스트로 모읍니다.",
+    "options": [
+      "collect",
+      "sum",
+      "distinct"
+    ],
+    "answer": "collect"
+  },
+  {
+    "id": "cypher-011",
+    "type": "cypher",
+    "difficulty": "medium",
+    "domain": "social",
+    "track": "recommendation",
+    "lesson": "L02",
     "concepts": ["pattern", "filter", "aggregation"],
+    "estimatedSec": 120,
     "question": "특정 사용자 U1과 공통 친구를 가진 모든 사용자의 이름을 조회하는 쿼리를 작성하세요.",
     "hint": [
       "MATCH 절에서 동일한 이웃을 공유하는 패턴을 찾아보세요",
@@ -84,14 +491,40 @@
     ],
     "explanation": "공통 이웃을 찾은 뒤 자기 자신은 제외하고 이름을 반환하는 문제입니다.",
     "expected": [],
+    "returnKey": "name",
     "ordered": false
   },
   {
-    "id": "cypher-003",
+    "id": "mcq-014",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "travel",
+    "track": "paths",
+    "lesson": "L02",
+    "concepts": ["shortest-path", "weight"],
+    "estimatedSec": 75,
+    "question": "가중치가 있는 관계를 고려한 최단 경로를 구할 때 사용할 수 있는 함수는 무엇인가요?",
+    "hint": [
+      "shortestPath와 함께 사용됩니다",
+      "path를 반환합니다"
+    ],
+    "explanation": "shortestPath는 최단 경로를 찾는 기본 함수입니다.",
+    "options": [
+      "shortestPath",
+      "longestPath",
+      "minPath"
+    ],
+    "answer": "shortestPath"
+  },
+  {
+    "id": "cypher-012",
     "type": "cypher",
     "difficulty": "hard",
     "domain": "travel",
+    "track": "paths",
+    "lesson": "L02",
     "concepts": ["path", "shortest-path", "aggregation"],
+    "estimatedSec": 180,
     "question": "두 도시 사이의 최단 경로를 찾는 쿼리를 작성하고, 총 거리를 반환하세요.",
     "hint": [
       "p = shortestPath(...) 형태를 떠올려 보세요",
@@ -99,139 +532,40 @@
     ],
     "explanation": "shortestPath로 경로를 찾고 reduce로 거리를 합산하는 문제입니다.",
     "expected": [],
+    "returnKey": "distance",
     "ordered": true
   },
   {
-    "id": "mcq-004",
-    "type": "mcq",
-    "difficulty": "easy",
-    "domain": "shopping",
-    "concepts": ["filter", "match"],
-    "question": "상품 노드(Product)에서 가격이 100 이상인 상품을 찾으려면 WHERE 절에 어떤 비교 연산을 사용하나요?",
-    "hint": [
-      ">= 연산을 떠올려 보세요",
-      "숫자 비교는 정수/실수를 그대로 비교합니다"
-    ],
-    "explanation": "가격이 특정 값 이상인 조건은 WHERE price >= 100 형태로 작성합니다.",
-    "options": [
-      "price >= 100",
-      "price => 100",
-      "price <> 100"
-    ],
-    "answer": "price >= 100"
-  },
-  {
-    "id": "mcq-005",
+    "id": "mcq-015",
     "type": "mcq",
     "difficulty": "medium",
-    "domain": "shopping",
-    "concepts": ["aggregation", "order"],
-    "question": "장바구니 총액을 계산할 때 SUM을 사용한다면, 결과를 높은 금액 순으로 정렬하려면 어떤 절을 추가해야 하나요?",
+    "domain": "recommendation",
+    "track": "recommendation",
+    "lesson": "L01",
+    "concepts": ["recommendation", "ranking"],
+    "estimatedSec": 70,
+    "question": "추천 시스템에서 최근 행동을 강조하려면 어떤 가중치를 높이는 전략이 적절한가요?",
     "hint": [
-      "집계 결과는 ORDER BY로 정렬합니다",
-      "내림차순은 DESC 키워드를 사용합니다"
+      "최근 이벤트에 높은 점수를 줍니다",
+      "시간 감쇠를 생각해 보세요"
     ],
-    "explanation": "SUM으로 합산한 뒤 ORDER BY total DESC 형태로 정렬합니다.",
+    "explanation": "최근 행동에 더 높은 가중치를 두면 최신 취향을 반영할 수 있습니다.",
     "options": [
-      "ORDER BY total DESC",
-      "SORT BY total ASC",
-      "GROUP BY total DESC"
+      "최근 이벤트에 더 높은 가중치를 준다",
+      "모든 이벤트에 동일한 가중치를 준다",
+      "가중치를 없앤다"
     ],
-    "answer": "ORDER BY total DESC"
+    "answer": "최근 이벤트에 더 높은 가중치를 준다"
   },
   {
-    "id": "mcq-006",
-    "type": "mcq",
-    "difficulty": "medium",
-    "domain": "general",
-    "concepts": ["update", "merge"],
-    "question": "MERGE (u:User {id: $id}) ON CREATE SET u.createdAt = timestamp() ON MATCH SET u.lastSeen = timestamp() 는 어떤 동작을 하나요?",
-    "hint": [
-      "존재하면 갱신, 없으면 생성",
-      "MERGE는 UPSERT 같은 역할입니다"
-    ],
-    "explanation": "MERGE는 노드를 찾아보고 없으면 생성, 있으면 ON MATCH 절을 실행합니다.",
-    "options": [
-      "항상 새 User 노드를 생성한다",
-      "존재하면 lastSeen을, 없으면 createdAt을 설정한다",
-      "아무 동작도 하지 않는다"
-    ],
-    "answer": "존재하면 lastSeen을, 없으면 createdAt을 설정한다"
-  },
-  {
-    "id": "cypher-004",
-    "type": "cypher",
-    "difficulty": "easy",
-    "domain": "shopping",
-    "concepts": ["filter", "return"],
-    "question": "가격이 50 미만인 상품 이름을 모두 반환하는 쿼리를 작성하세요.",
-    "hint": [
-      "MATCH (p:Product) WHERE p.price < 50 RETURN p.name",
-      "간단한 비교 연산을 사용합니다"
-    ],
-    "explanation": "가격 조건을 WHERE로 걸고 이름을 반환하면 됩니다.",
-    "expected": [],
-    "ordered": false
-  },
-  {
-    "id": "cypher-005",
-    "type": "cypher",
-    "difficulty": "medium",
-    "domain": "social",
-    "concepts": ["path", "exclude"],
-    "question": "사용자 U1과 직접 친구가 아닌 친구의 친구를 찾는 쿼리를 작성하세요.",
-    "hint": [
-      "두 번의 KNOWS 관계를 탐색한 뒤 NOT EXISTS로 직접 친구를 제외하세요",
-      "DISTINCT를 사용해 중복을 없앨 수 있습니다"
-    ],
-    "explanation": "가변 길이 혹은 두 단계 패턴으로 연결 후 필터링하는 문제입니다.",
-    "expected": [],
-    "ordered": false
-  },
-  {
-    "id": "mcq-007",
-    "type": "mcq",
-    "difficulty": "hard",
-    "domain": "knowledge",
-    "concepts": ["graph-model", "labels"],
-    "question": "지식 그래프에서 동일한 엔티티에 여러 레이블을 부여하는 이유는 무엇인가요?",
-    "hint": [
-      "검색 및 인덱싱을 유연하게 만들기 위해",
-      "엔티티의 다양한 역할을 표현할 수 있습니다"
-    ],
-    "explanation": "다중 레이블은 검색 최적화와 다중 역할 표현 모두에 도움이 됩니다.",
-    "options": [
-      "엔티티를 중복 생성하지 않기 위해",
-      "다양한 카테고리나 역할을 함께 표현하고 인덱싱 유연성을 높이기 위해",
-      "쿼리 속도를 느리게 만들기 위해"
-    ],
-    "answer": "다양한 카테고리나 역할을 함께 표현하고 인덱싱 유연성을 높이기 위해"
-  },
-  {
-    "id": "mcq-008",
-    "type": "mcq",
-    "difficulty": "easy",
-    "domain": "general",
-    "concepts": ["return", "alias"],
-    "question": "RETURN a.name AS userName 과 같은 구문에서 AS의 역할은 무엇인가요?",
-    "hint": [
-      "AS는 별칭을 지정합니다",
-      "컬럼명을 읽기 쉽게 바꿀 때 사용합니다"
-    ],
-    "explanation": "AS는 반환 컬럼의 별칭을 지정합니다.",
-    "options": [
-      "새 노드를 생성한다",
-      "반환 컬럼 이름을 userName으로 지정한다",
-      "쿼리를 종료한다"
-    ],
-    "answer": "반환 컬럼 이름을 userName으로 지정한다"
-  },
-  {
-    "id": "cypher-006",
+    "id": "cypher-013",
     "type": "cypher",
     "difficulty": "medium",
     "domain": "shopping",
+    "track": "aggregation",
+    "lesson": "L01",
     "concepts": ["aggregation", "group"],
+    "estimatedSec": 120,
     "question": "카테고리별 상품 수를 세어 카테고리 이름과 함께 반환하는 쿼리를 작성하세요.",
     "hint": [
       "MATCH (p:Product) RETURN p.category AS category, count(*) AS cnt",
@@ -239,14 +573,81 @@
     ],
     "explanation": "카테고리별로 그룹화해 count(*)를 반환하는 기본 집계 패턴입니다.",
     "expected": [],
+    "returnKey": "category",
     "ordered": false
   },
   {
-    "id": "cypher-007",
+    "id": "mcq-016",
+    "type": "mcq",
+    "difficulty": "hard",
+    "domain": "knowledge",
+    "track": "knowledge",
+    "lesson": "L02",
+    "concepts": ["ontology", "hierarchy"],
+    "estimatedSec": 90,
+    "question": "지식 그래프에서 상위/하위 개념을 표현할 때 자주 사용하는 관계 타입은 무엇인가요?",
+    "hint": [
+      "IS_A 혹은 SUBCLASS_OF 패턴",
+      "계층 구조를 나타냅니다"
+    ],
+    "explanation": "IS_A 또는 SUBCLASS_OF 관계는 계층형 온톨로지를 표현하는 데 사용됩니다.",
+    "options": [
+      "IS_A",
+      "FRIEND_OF",
+      "PURCHASED"
+    ],
+    "answer": "IS_A"
+  },
+  {
+    "id": "cypher-014",
+    "type": "cypher",
+    "difficulty": "medium",
+    "domain": "general",
+    "track": "modeling",
+    "lesson": "L01",
+    "concepts": ["labels", "count"],
+    "estimatedSec": 90,
+    "question": "모든 노드의 레이블과 레이블별 개수를 반환하는 쿼리를 작성하세요.",
+    "hint": [
+      "MATCH (n) RETURN labels(n) AS labels, count(*) AS cnt",
+      "labels(n)을 컬럼으로 반환합니다"
+    ],
+    "explanation": "레이블별 노드 개수를 집계하는 문제입니다.",
+    "expected": [],
+    "returnKey": "labels",
+    "ordered": false
+  },
+  {
+    "id": "mcq-017",
+    "type": "mcq",
+    "difficulty": "easy",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L03",
+    "concepts": ["order", "limit"],
+    "estimatedSec": 45,
+    "question": "결과를 10개로 제한하려면 어떤 절을 사용하나요?",
+    "hint": [
+      "LIMIT 절을 사용합니다",
+      "ORDER BY와 함께 자주 사용됩니다"
+    ],
+    "explanation": "LIMIT 10으로 결과 개수를 제한합니다.",
+    "options": [
+      "LIMIT 10",
+      "TOP 10",
+      "CAP 10"
+    ],
+    "answer": "LIMIT 10"
+  },
+  {
+    "id": "cypher-015",
     "type": "cypher",
     "difficulty": "hard",
     "domain": "general",
+    "track": "core",
+    "lesson": "L03",
     "concepts": ["ranking", "order"],
+    "estimatedSec": 150,
     "question": "사용자들의 포인트를 기준으로 상위 3명을 조회하는 쿼리를 작성하세요.",
     "hint": [
       "ORDER BY 포인트 DESC LIMIT 3",
@@ -254,33 +655,40 @@
     ],
     "explanation": "정렬 후 LIMIT으로 상위 N을 자르는 랭킹 기본 문제입니다.",
     "expected": [],
+    "returnKey": "name",
     "ordered": true
   },
   {
-    "id": "mcq-009",
+    "id": "mcq-018",
     "type": "mcq",
     "difficulty": "medium",
-    "domain": "social",
-    "concepts": ["filter", "distinct"],
-    "question": "중복된 관계 결과를 제거하려면 어떤 키워드를 사용하나요?",
+    "domain": "general",
+    "track": "aggregation",
+    "lesson": "L03",
+    "concepts": ["avg", "round"],
+    "estimatedSec": 70,
+    "question": "평균 값을 반올림하려면 어떤 함수를 함께 사용할 수 있나요?",
     "hint": [
-      "SQL과 비슷한 키워드",
-      "반환 컬럼 앞에 위치합니다"
+      "avg와 함께 사용되는 함수입니다",
+      "소수점 처리를 합니다"
     ],
-    "explanation": "DISTINCT는 중복 행을 제거하는 키워드입니다.",
+    "explanation": "round() 함수는 숫자를 반올림합니다.",
     "options": [
-      "UNIQUE",
-      "DISTINCT",
-      "REMOVE"
+      "round",
+      "ceil",
+      "trim"
     ],
-    "answer": "DISTINCT"
+    "answer": "round"
   },
   {
-    "id": "cypher-008",
+    "id": "cypher-016",
     "type": "cypher",
     "difficulty": "medium",
     "domain": "knowledge",
+    "track": "knowledge",
+    "lesson": "L01",
     "concepts": ["merge", "upsert"],
+    "estimatedSec": 110,
     "question": "지식 그래프에서 특정 엔티티 이름이 없으면 생성하고 있으면 조회된 노드를 반환하는 MERGE 쿼리를 작성하세요.",
     "hint": [
       "MERGE (e:Entity {name: $name}) RETURN e",
@@ -288,86 +696,40 @@
     ],
     "explanation": "MERGE를 사용해 존재 여부와 상관없이 동일한 노드 참조를 확보합니다.",
     "expected": [],
+    "returnKey": "name",
     "ordered": false
   },
   {
-    "id": "cypher-003",
-    "type": "cypher",
+    "id": "mcq-019",
+    "type": "mcq",
     "difficulty": "hard",
-    "domain": "travel",
-    "concepts": ["path", "shortest-path", "aggregation"],
-    "question": "두 도시 사이의 최단 경로를 찾는 쿼리를 작성하고, 총 거리를 반환하세요.",
-    "hint": [
-      "p = shortestPath(...) 형태를 떠올려 보세요",
-      "경로의 관계 속성 distance를 합산해야 합니다"
-    ],
-    "explanation": "shortestPath로 경로를 찾고 reduce로 거리를 합산하는 문제입니다.",
-    "expected": [],
-    "ordered": true
-  },
-  {
-    "id": "mcq-004",
-    "type": "mcq",
-    "difficulty": "easy",
-    "domain": "shopping",
-    "concepts": ["filter", "match"],
-    "question": "상품 노드(Product)에서 가격이 100 이상인 상품을 찾으려면 WHERE 절에 어떤 비교 연산을 사용하나요?",
-    "hint": [
-      ">= 연산을 떠올려 보세요",
-      "숫자 비교는 정수/실수를 그대로 비교합니다"
-    ],
-    "explanation": "가격이 특정 값 이상인 조건은 WHERE price >= 100 형태로 작성합니다.",
-    "options": [
-      "price >= 100",
-      "price => 100",
-      "price <> 100"
-    ],
-    "answer": "price >= 100"
-  },
-  {
-    "id": "mcq-005",
-    "type": "mcq",
-    "difficulty": "medium",
-    "domain": "shopping",
-    "concepts": ["aggregation", "order"],
-    "question": "장바구니 총액을 계산할 때 SUM을 사용한다면, 결과를 높은 금액 순으로 정렬하려면 어떤 절을 추가해야 하나요?",
-    "hint": [
-      "집계 결과는 ORDER BY로 정렬합니다",
-      "내림차순은 DESC 키워드를 사용합니다"
-    ],
-    "explanation": "SUM으로 합산한 뒤 ORDER BY total DESC 형태로 정렬합니다.",
-    "options": [
-      "ORDER BY total DESC",
-      "SORT BY total ASC",
-      "GROUP BY total DESC"
-    ],
-    "answer": "ORDER BY total DESC"
-  },
-  {
-    "id": "mcq-006",
-    "type": "mcq",
-    "difficulty": "medium",
     "domain": "general",
-    "concepts": ["update", "merge"],
-    "question": "MERGE (u:User {id: $id}) ON CREATE SET u.createdAt = timestamp() ON MATCH SET u.lastSeen = timestamp() 는 어떤 동작을 하나요?",
+    "track": "modeling",
+    "lesson": "L03",
+    "concepts": ["constraints", "uniqueness"],
+    "estimatedSec": 90,
+    "question": "동일한 속성 값이 중복되지 않도록 강제하려면 어떤 제약을 사용하나요?",
     "hint": [
-      "존재하면 갱신, 없으면 생성",
-      "MERGE는 UPSERT 같은 역할입니다"
+      "유니크 제약을 떠올려 보세요",
+      "CONSTRAINT 문으로 생성합니다"
     ],
-    "explanation": "MERGE는 노드를 찾아보고 없으면 생성, 있으면 ON MATCH 절을 실행합니다.",
+    "explanation": "UNIQUENESS 제약은 중복 값을 방지합니다.",
     "options": [
-      "항상 새 User 노드를 생성한다",
-      "존재하면 lastSeen을, 없으면 createdAt을 설정한다",
-      "아무 동작도 하지 않는다"
+      "UNIQUE CONSTRAINT",
+      "EXISTS CONSTRAINT",
+      "PROPERTY INDEX"
     ],
-    "answer": "존재하면 lastSeen을, 없으면 createdAt을 설정한다"
+    "answer": "UNIQUE CONSTRAINT"
   },
   {
-    "id": "cypher-004",
+    "id": "cypher-017",
     "type": "cypher",
-    "difficulty": "easy",
+    "difficulty": "medium",
     "domain": "shopping",
+    "track": "core",
+    "lesson": "L02",
     "concepts": ["filter", "return"],
+    "estimatedSec": 110,
     "question": "가격이 50 미만인 상품 이름을 모두 반환하는 쿼리를 작성하세요.",
     "hint": [
       "MATCH (p:Product) WHERE p.price < 50 RETURN p.name",
@@ -375,14 +737,40 @@
     ],
     "explanation": "가격 조건을 WHERE로 걸고 이름을 반환하면 됩니다.",
     "expected": [],
+    "returnKey": "name",
     "ordered": false
   },
   {
-    "id": "cypher-005",
+    "id": "mcq-020",
+    "type": "mcq",
+    "difficulty": "medium",
+    "domain": "paths",
+    "track": "paths",
+    "lesson": "L03",
+    "concepts": ["path", "pattern"],
+    "estimatedSec": 75,
+    "question": "경로 길이를 반환할 때 사용하는 함수는 무엇인가요?",
+    "hint": [
+      "length(p) 형태입니다",
+      "p는 경로 변수입니다"
+    ],
+    "explanation": "length(p)는 경로에 포함된 관계 수를 반환합니다.",
+    "options": [
+      "size(p)",
+      "length(p)",
+      "count(p)"
+    ],
+    "answer": "length(p)"
+  },
+  {
+    "id": "cypher-018",
     "type": "cypher",
     "difficulty": "medium",
     "domain": "social",
+    "track": "paths",
+    "lesson": "L01",
     "concepts": ["path", "exclude"],
+    "estimatedSec": 130,
     "question": "사용자 U1과 직접 친구가 아닌 친구의 친구를 찾는 쿼리를 작성하세요.",
     "hint": [
       "두 번의 KNOWS 관계를 탐색한 뒤 NOT EXISTS로 직접 친구를 제외하세요",
@@ -390,121 +778,83 @@
     ],
     "explanation": "가변 길이 혹은 두 단계 패턴으로 연결 후 필터링하는 문제입니다.",
     "expected": [],
+    "returnKey": "name",
     "ordered": false
   },
   {
-    "id": "mcq-007",
-    "type": "mcq",
-    "difficulty": "hard",
-    "domain": "knowledge",
-    "concepts": ["graph-model", "labels"],
-    "question": "지식 그래프에서 동일한 엔티티에 여러 레이블을 부여하는 이유는 무엇인가요?",
-    "hint": [
-      "검색 및 인덱싱을 유연하게 만들기 위해",
-      "엔티티의 다양한 역할을 표현할 수 있습니다"
-    ],
-    "explanation": "다중 레이블은 검색 최적화와 다중 역할 표현 모두에 도움이 됩니다.",
-    "options": [
-      "엔티티를 중복 생성하지 않기 위해",
-      "다양한 카테고리나 역할을 함께 표현하고 인덱싱 유연성을 높이기 위해",
-      "쿼리 속도를 느리게 만들기 위해"
-    ],
-    "answer": "다양한 카테고리나 역할을 함께 표현하고 인덱싱 유연성을 높이기 위해"
-  },
-  {
-    "id": "mcq-008",
-    "type": "mcq",
-    "difficulty": "easy",
-    "domain": "general",
-    "concepts": ["return", "alias"],
-    "question": "RETURN a.name AS userName 과 같은 구문에서 AS의 역할은 무엇인가요?",
-    "hint": [
-      "AS는 별칭을 지정합니다",
-      "컬럼명을 읽기 쉽게 바꿀 때 사용합니다"
-    ],
-    "explanation": "AS는 반환 컬럼의 별칭을 지정합니다.",
-    "options": [
-      "새 노드를 생성한다",
-      "반환 컬럼 이름을 userName으로 지정한다",
-      "쿼리를 종료한다"
-    ],
-    "answer": "반환 컬럼 이름을 userName으로 지정한다"
-  },
-  {
-    "id": "cypher-006",
+    "id": "cypher-019",
     "type": "cypher",
     "difficulty": "medium",
-    "domain": "shopping",
-    "concepts": ["aggregation", "group"],
-    "question": "카테고리별 상품 수를 세어 카테고리 이름과 함께 반환하는 쿼리를 작성하세요.",
+    "domain": "recommendation",
+    "track": "recommendation",
+    "lesson": "L01",
+    "concepts": ["pattern", "relationships"],
+    "estimatedSec": 120,
+    "question": "User가 Item을 VIEW한 관계를 반환하는 쿼리를 작성하세요.",
     "hint": [
-      "MATCH (p:Product) RETURN p.category AS category, count(*) AS cnt",
-      "집계에는 GROUP BY 대신 RETURN에서 컬럼을 함께 적습니다"
+      "MATCH (u:User)-[:VIEW]->(i:Item)",
+      "RETURN u.userId, i.itemId"
     ],
-    "explanation": "카테고리별로 그룹화해 count(*)를 반환하는 기본 집계 패턴입니다.",
+    "explanation": "추천 도메인의 기본 조회 패턴입니다.",
     "expected": [],
+    "returnKey": "itemId",
     "ordered": false
   },
   {
-    "id": "cypher-007",
-    "type": "cypher",
-    "difficulty": "hard",
-    "domain": "general",
-    "concepts": ["ranking", "order"],
-    "question": "사용자들의 포인트를 기준으로 상위 3명을 조회하는 쿼리를 작성하세요.",
-    "hint": [
-      "ORDER BY 포인트 DESC LIMIT 3",
-      "MATCH (u:User) RETURN u.name, u.points ORDER BY u.points DESC LIMIT 3"
-    ],
-    "explanation": "정렬 후 LIMIT으로 상위 N을 자르는 랭킹 기본 문제입니다.",
-    "expected": [],
-    "ordered": true
-  },
-  {
-    "id": "mcq-009",
-    "type": "mcq",
-    "difficulty": "medium",
-    "domain": "social",
-    "concepts": ["filter", "distinct"],
-    "question": "중복된 관계 결과를 제거하려면 어떤 키워드를 사용하나요?",
-    "hint": [
-      "SQL과 비슷한 키워드",
-      "반환 컬럼 앞에 위치합니다"
-    ],
-    "explanation": "DISTINCT는 중복 행을 제거하는 키워드입니다.",
-    "options": [
-      "UNIQUE",
-      "DISTINCT",
-      "REMOVE"
-    ],
-    "answer": "DISTINCT"
-  },
-  {
-    "id": "cypher-008",
+    "id": "cypher-020",
     "type": "cypher",
     "difficulty": "medium",
     "domain": "knowledge",
-    "concepts": ["merge", "upsert"],
-    "question": "지식 그래프에서 특정 엔티티 이름이 없으면 생성하고 있으면 조회된 노드를 반환하는 MERGE 쿼리를 작성하세요.",
+    "track": "knowledge",
+    "lesson": "L02",
+    "concepts": ["pattern", "relation"],
+    "estimatedSec": 120,
+    "question": "Entity와 관련된 다른 Entity를 조회하는 쿼리를 작성하세요.",
     "hint": [
-      "MERGE (e:Entity {name: $name}) RETURN e",
-      "ON CREATE/ON MATCH 절로 추가 속성을 설정할 수 있습니다"
+      "MATCH (e:Entity)-[:RELATED_TO]->(t:Entity)",
+      "RETURN e.name AS name, t.name AS target"
     ],
-    "explanation": "MERGE를 사용해 존재 여부와 상관없이 동일한 노드 참조를 확보합니다.",
+    "explanation": "지식 그래프에서 관계를 따라 연결된 엔티티를 조회합니다.",
     "expected": [],
+    "returnKey": "target",
     "ordered": false
   },
   {
-    "id": "cypher-003",
+    "id": "cypher-021",
     "type": "cypher",
-    "difficulty": "hard",
-    "question": "두 도시 사이의 최단 경로를 찾는 쿼리를 작성하고, 총 거리를 반환하세요.",
+    "difficulty": "medium",
+    "domain": "general",
+    "track": "core",
+    "lesson": "L03",
+    "concepts": ["return", "node"],
+    "estimatedSec": 100,
+    "question": "노드를 5개 샘플로 반환하는 Cypher를 작성하세요.",
     "hint": [
-      "p = shortestPath(...) 형태를 떠올려 보세요",
-      "경로의 관계 속성 distance를 합산해야 합니다"
+      "MATCH (n) RETURN n LIMIT 5",
+      "LIMIT으로 개수를 제한합니다"
     ],
-    "explanation": "shortestPath로 경로를 찾고 reduce로 거리를 합산하는 문제입니다.",
+    "explanation": "노드 샘플을 반환하는 기본 조회입니다.",
     "expected": [],
-    "ordered": true
+    "returnKey": "n",
+    "ordered": false
+  },
+  {
+    "id": "cypher-022",
+    "type": "cypher",
+    "difficulty": "expert",
+    "domain": "travel",
+    "track": "paths",
+    "lesson": "L03",
+    "concepts": ["path", "length"],
+    "estimatedSec": 180,
+    "question": "1~3 hop 경로의 길이를 반환하는 쿼리를 작성하세요.",
+    "hint": [
+      "MATCH p=(a)-[*1..3]->(b)",
+      "RETURN length(p) AS hops"
+    ],
+    "explanation": "가변 길이 경로의 길이를 반환하는 문제입니다.",
+    "expected": [],
+    "returnKey": "hops",
+    "ordered": false
   }
 ]
