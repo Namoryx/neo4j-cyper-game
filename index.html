@@ -7,6 +7,15 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      const isLocalHost = ['localhost', '127.0.0.1'].includes(location.hostname);
+      const alreadyInDocs = /(^|\/)docs\/?$/.test(location.pathname) || location.pathname.includes('/docs/');
+
+      if (!isLocalHost && !alreadyInDocs) {
+        const withTrailingSlash = location.pathname.endsWith('/') ? location.pathname : `${location.pathname}/`;
+        location.replace(`${withTrailingSlash}docs/`);
+      }
+    </script>
+    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>
