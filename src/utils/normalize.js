@@ -8,8 +8,29 @@ function mapFieldsToRows(fields = [], values = []) {
   });
 }
 
+function mapRecordsToRows(records = []) {
+  return records.map((record) => {
+    const row = {};
+    const keys = record?.keys || [];
+
+    keys.forEach((key, idx) => {
+      const value = Array.isArray(record?._fields)
+        ? record._fields[idx]
+        : record?.[key] ?? record?.[idx];
+      row[key] = value;
+    });
+
+    return row;
+  });
+}
+
 export function toRows(responseJson = {}) {
   if (!responseJson) return [];
+
+  const records = responseJson?.data?.records || responseJson?.records;
+  if (Array.isArray(records) && records.length) {
+    return mapRecordsToRows(records);
+  }
 
   if (responseJson?.data?.fields && Array.isArray(responseJson?.data?.values)) {
     return mapFieldsToRows(responseJson.data.fields, responseJson.data.values);
