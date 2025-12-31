@@ -30,6 +30,17 @@
       if (!isLocalDev && entryScript) {
         entryScript.addEventListener('error', loadProdBundle, { once: true });
       }
+
+      window.addEventListener(
+        'error',
+        (event) => {
+          const target = event?.target;
+          if (target?.tagName === 'SCRIPT' && target.src && target.src.includes('/src/main.jsx')) {
+            loadProdBundle();
+          }
+        },
+        { once: true }
+      );
     </script>
   </body>
 </html>
