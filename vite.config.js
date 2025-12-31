@@ -6,8 +6,7 @@ const DEFAULT_REPO_NAME = 'neo4j-cyper-game';
 export default defineConfig(({ command }) => {
   const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || DEFAULT_REPO_NAME;
   // GitHub Pages는 repo 하위 경로를 사용하므로, 빌드 시 base를 자동으로 맞춥니다.
-  // 절대 경로 대신 상대 경로를 사용해 404(main.jsx) 오류를 방지합니다.
-  const base = command === 'build' ? './' : '/';
+  const base = command === 'build' ? `/${repoName}/` : '/';
 
   return {
     plugins: [react()],

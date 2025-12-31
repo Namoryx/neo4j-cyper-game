@@ -4,19 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>쿼카와 함께하는 Cypher 게임</title>
-    <script type="module" crossorigin src="./assets/app.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/app.css">
+    <script type="module" crossorigin src="/neo4j-cyper-game/assets/app.js"></script>
+    <link rel="stylesheet" crossorigin href="/neo4j-cyper-game/assets/app.css">
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      const isLocalHost = ['localhost', '127.0.0.1'].includes(location.hostname);
-      const alreadyInDocs = /(^|\/)docs\/?$/.test(location.pathname) || location.pathname.includes('/docs/');
-
-      if (!isLocalHost && !alreadyInDocs) {
-        const withTrailingSlash = location.pathname.endsWith('/') ? location.pathname : `${location.pathname}/`;
-        location.replace(`${withTrailingSlash}docs/`);
-      }
-    </script>
   </body>
 </html>
