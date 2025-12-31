@@ -10,15 +10,34 @@ function mapFieldsToRows(fields = [], values = []) {
 
 function mapRecordsToRows(records = []) {
   return records.map((record) => {
-    const row = {};
-    const keys = record?.keys || record?.columns || Object.keys(record ?? {});
+    const keys =
+      (Array.isArray(record?.keys) && record.keys) ||
+      (Array.isArray(record?.columns) && record.columns) ||
+      Object.keys(record ?? {});
 
+    const indexedValues = Array.isArray(record?._fields)
+      ? record._fields
+      : Array.isArray(record?.fields)
+        ? record.fields
+        : Array.isArray(record?.values)
+          ? record.values
+          : Array.isArray(record?.row)
+            ? record.row
+            : null;
+
+    if (indexedValues && keys?.length === indexedValues.length) {
+      return keys.reduce((acc, key, idx) => ({ ...acc, [key]: indexedValues[idx] }), {});
+    }
+
+    const row = {};
     keys.forEach((key, idx) => {
       const value = Array.isArray(record?._fields)
         ? record._fields[idx]
         : Array.isArray(record?.fields)
           ? record.fields[idx]
-          : record?.[key] ?? record?.[idx];
+          : Array.isArray(record?.values)
+            ? record.values[idx]
+            : record?.[key] ?? record?.[idx];
       row[key] = value;
     });
 
@@ -52,6 +71,12 @@ export function toRows(responseJson = {}) {
 
   if (responseJson?.result?.data?.fields && Array.isArray(responseJson?.result?.data?.values)) {
     return mapFieldsToRows(responseJson.result.data.fields, responseJson.result.data.values);
+  }
+
+  if (Array.isArray(responseJson?.result?.data) && responseJson?.result?.columns) {
+    const fields = responseJson.result.columns;
+    const values = responseJson.result.data.map((item) => item?.row ?? item);
+    return mapFieldsToRows(fields, values);
   }
 
   if (Array.isArray(responseJson?.data?.results) && responseJson.data.results[0]?.data) {
