@@ -25,6 +25,7 @@ function encodeBasicAuth(username, password) {
 async function fetchWithConfig({ url, headers, body, timeoutMs = 5000 }) {
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  let json;
 
   try {
     const res = await fetch(url, {
@@ -45,9 +46,6 @@ async function fetchWithConfig({ url, headers, body, timeoutMs = 5000 }) {
       const message = json?.error?.message || json?.message || json?.error || 'Request failed';
       throw new Error(message);
     }
-  }
-
-    return json;
   } catch (error) {
     if (error.name === 'AbortError') {
       throw new Error('Request timed out');
@@ -56,6 +54,8 @@ async function fetchWithConfig({ url, headers, body, timeoutMs = 5000 }) {
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
   }
+
+  return json;
 }
 
 function buildDirectConfig(query, params) {
