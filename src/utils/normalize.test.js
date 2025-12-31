@@ -15,6 +15,19 @@ describe('toRows', () => {
     expect(toRows(response)).toEqual([{ name: 'Alice', age: 30 }]);
   });
 
+  it('maps records with columns and values', () => {
+    const response = {
+      records: [
+        {
+          columns: ['name', 'age'],
+          values: ['Charlie', 28],
+        },
+      ],
+    };
+
+    expect(toRows(response)).toEqual([{ name: 'Charlie', age: 28 }]);
+  });
+
   it('maps records when fields array is present', () => {
     const response = {
       data: {
@@ -45,5 +58,51 @@ describe('toRows', () => {
     };
 
     expect(toRows(response)).toEqual([{ name: 'Bob' }]);
+  });
+
+  it('reads nested result columns/data shape', () => {
+    const response = {
+      result: {
+        columns: ['title'],
+        data: [
+          { row: ['Matrix'] },
+          { row: ['John Wick'] },
+        ],
+      },
+    };
+
+    expect(toRows(response)).toEqual([{ title: 'Matrix' }, { title: 'John Wick' }]);
+  });
+
+  it('reads result.results response shape', () => {
+    const response = {
+      result: {
+        results: [
+          {
+            columns: ['name'],
+            data: [{ row: ['Neo'] }, { row: ['Trinity'] }],
+          },
+        ],
+      },
+    };
+
+    expect(toRows(response)).toEqual([{ name: 'Neo' }, { name: 'Trinity' }]);
+  });
+
+  it('reads data.result.results response shape', () => {
+    const response = {
+      data: {
+        result: {
+          results: [
+            {
+              columns: ['city'],
+              data: [{ row: ['Seoul'] }],
+            },
+          ],
+        },
+      },
+    };
+
+    expect(toRows(response)).toEqual([{ city: 'Seoul' }]);
   });
 });
