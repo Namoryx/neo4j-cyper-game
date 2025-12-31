@@ -1,56 +1,132 @@
 import { getMockData } from './mockData.js';
 
+const DEFAULT_WORKER_URL = 'https://neo4j-runner.neo4j-namoryx.workers.dev/run';
+
+function readEnv(key) {
+  if (typeof import.meta !== 'undefined' && import.meta.env?.[key]) {
+    return import.meta.env[key];
+  }
+
+  if (typeof process !== 'undefined' && process.env?.[key]) {
+    return process.env[key];
+  }
+
+  return undefined;
+}
+
+function encodeBasicAuth(username, password) {
+  if (typeof btoa === 'function') {
+    return btoa(`${username}:${password}`);
+  }
+
+  return Buffer.from(`${username}:${password}`).toString('base64');
+}
+
+async function fetchWithConfig({ url, headers, body }) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify(body)
+  });
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (error) {
+    // ignore JSON parse error here; the caller will decide how to handle
+  }
+
+  if (!res.ok) {
+    const message = json?.error?.message || json?.message || json?.error || 'Request failed';
+    throw new Error(message);
+  }
+
+  return json;
+}
+
+function buildDirectConfig(query, params) {
+  const endpoint =
+    readEnv('VITE_NEO4J_ENDPOINT') || readEnv('NEO4J_ENDPOINT');
+  const username =
+    readEnv('VITE_NEO4J_USERNAME') || readEnv('NEO4J_USERNAME');
+  const password =
+    readEnv('VITE_NEO4J_PASSWORD') || readEnv('NEO4J_PASSWORD');
+  const database =
+    readEnv('VITE_NEO4J_DATABASE') || readEnv('NEO4J_DATABASE') || 'neo4j';
+
+  if (!endpoint || !username || !password) {
+    return null;
+  }
+
+  return {
+    url: endpoint,
+    headers: {
+      Authorization: `Basic ${encodeBasicAuth(username, password)}`
+    },
+    body: {
+      query,
+      parameters: params,
+      database
+    }
+  };
+}
+
+function buildWorkerConfig(query, params) {
+  const workerUrl = readEnv('VITE_NEO4J_WORKER_URL') || DEFAULT_WORKER_URL;
+
+  return {
+    url: workerUrl,
+    headers: {},
+    body: { cypher: query, params }
+  };
+}
+
+function getMockFallback(query) {
+  const mock = getMockData(query);
+  if (mock) {
+    console.warn('Falling back to mock data.');
+    return { ...mock, _mocked: true };
+  }
+  return null;
+}
+
+function normalizeResponse(json, query) {
+  if (!json?.records || json.records.length === 0) {
+    const mock = getMockData(query);
+    if (mock) {
+      console.warn('Backend returned empty records, using mock data.');
+      return { ...mock, _mocked: true };
+    }
+  }
+
+  return json;
+}
+
 export async function runCypher(query, params = {}) {
   if (!query) {
     throw new Error('Cypher가 비어 있습니다.');
   }
 
-  let json;
+  const directConfig = buildDirectConfig(query, params);
+  const workerConfig = buildWorkerConfig(query, params);
+
   try {
-    const res = await fetch('https://neo4j-runner.neo4j-namoryx.workers.dev/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cypher: query, params })
-    });
-
-    try {
-      json = await res.json();
-    } catch (error) {
-       // If JSON parsing fails, we might still want to try mock if it was a network error or similar?
-       // But here we just rethrow for now, or check res.ok
+    if (directConfig) {
+      try {
+        const json = await fetchWithConfig(directConfig);
+        return normalizeResponse(json, query);
+      } catch (error) {
+        console.warn('Direct Neo4j call failed, falling back to worker.', error.message);
+      }
     }
 
-    if (!res.ok) {
-        const message =
-        json?.error?.message || json?.message || json?.error || 'Request failed';
-        // If request failed, try mock
-        const mock = getMockData(query);
-        if (mock) {
-            console.warn('Backend request failed, using mock data.');
-            return { ...mock, _mocked: true };
-        }
-        throw new Error(message);
-    }
-
-    // Check if records are empty and if we have a mock for this query
-    // The issue is that "RETURN 1" returns empty records.
-    if (!json?.records || json.records.length === 0) {
-        const mock = getMockData(query);
-        if (mock) {
-            console.warn('Backend returned empty records, using mock data.');
-            return { ...mock, _mocked: true };
-        }
-    }
-
-    return json;
-
+    const json = await fetchWithConfig(workerConfig);
+    return normalizeResponse(json, query);
   } catch (error) {
-     // If fetch failed completely (network error), try mock
-     const mock = getMockData(query);
-     if (mock) {
-         console.warn('Network error or backend issue, using mock data.');
-         return { ...mock, _mocked: true };
-     }
-     throw error;
+    const mock = getMockFallback(query);
+    if (mock) {
+      return mock;
+    }
+    throw error;
   }
 }

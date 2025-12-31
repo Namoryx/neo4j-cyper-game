@@ -46,3 +46,4 @@ After deployment, the generated `index.html` should reference hashed assets, e.g
 ## Notes
 - The Vite base path is set to `/neo4j-cyper-game/` for GitHub Pages project hosting.
 - For a user/organization root page, adjust `base` in `vite.config.js` accordingly.
+- The app first tries to send Cypher queries directly to Neo4j using the environment variables `VITE_NEO4J_ENDPOINT`, `VITE_NEO4J_USERNAME`, `VITE_NEO4J_PASSWORD`, and optional `VITE_NEO4J_DATABASE`. If these are missing or the request fails, it falls back to the Cloudflare Worker URL in `VITE_NEO4J_WORKER_URL` (defaulting to the bundled worker).
