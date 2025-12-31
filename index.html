@@ -7,15 +7,29 @@
   </head>
   <body>
     <div id="root"></div>
+    <script type="module" id="vite-entry" src="/src/main.jsx"></script>
     <script>
-      const isLocalHost = ['localhost', '127.0.0.1'].includes(location.hostname);
-      const alreadyInDocs = /(^|\/)docs\/?$/.test(location.pathname) || location.pathname.includes('/docs/');
+      const entryScript = document.getElementById('vite-entry');
+      const isLocalDev = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+      const base = window.__APP_BASE__ || (location.pathname.includes('/neo4j-cyper-game/') ? '/neo4j-cyper-game/' : '/');
 
-      if (!isLocalHost && !alreadyInDocs) {
-        const withTrailingSlash = location.pathname.endsWith('/') ? location.pathname : `${location.pathname}/`;
-        location.replace(`${withTrailingSlash}docs/`);
+      const loadProdBundle = () => {
+        if (!document.querySelector(`link[href="${base}assets/app.css"]`)) {
+          const cssLink = document.createElement('link');
+          cssLink.rel = 'stylesheet';
+          cssLink.href = `${base}assets/app.css`;
+          document.head.appendChild(cssLink);
+        }
+
+        const prodScript = document.createElement('script');
+        prodScript.type = 'module';
+        prodScript.src = `${base}assets/app.js`;
+        document.body.appendChild(prodScript);
+      };
+
+      if (!isLocalDev && entryScript) {
+        entryScript.addEventListener('error', loadProdBundle, { once: true });
       }
     </script>
-    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>
