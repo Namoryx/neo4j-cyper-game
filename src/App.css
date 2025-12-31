@@ -98,13 +98,14 @@ body {
   flex: 1;
   display: flex;
   justify-content: center;
+  padding-bottom: 32px;
 }
 
 .app-layout {
   display: grid;
-  grid-template-columns: 3fr 2fr;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
   gap: 20px;
-  width: min(1180px, 100%);
+  width: min(1280px, 100%);
   align-items: start;
 }
 
@@ -122,11 +123,25 @@ body {
 
 .app-sidebar {
   position: sticky;
-  top: 16px;
+  top: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   align-self: start;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+}
+
+@media (max-width: 1100px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .app-sidebar {
+    position: relative;
+    top: 0;
+    max-height: none;
+  }
 }
 
 .card {
