@@ -2,6 +2,7 @@
   "name": "neo4j-cyper-game",
   "version": "1.0.0",
   "description": "Neo4j Cypher 게임 웹앱 스캐폴딩",
+  "homepage": "https://namoryx.github.io/neo4j-cyper-game",
   "type": "module",
   "scripts": {
     "dev": "vite",

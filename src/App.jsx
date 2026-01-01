@@ -3,6 +3,7 @@ import Quiz from './components/Quiz.jsx';
 import QuokkaCharacter from './components/QuokkaCharacter.jsx';
 import ResultPanel from './components/ResultPanel.jsx';
 import DiagnosticsPanel from './components/DiagnosticsPanel.jsx';
+import DebugPanel from './components/DebugPanel.jsx';
 import ModeSwitcher from './components/ModeSwitcher.jsx';
 import FilterPanel from './components/FilterPanel.jsx';
 import Playground from './components/Playground.jsx';
@@ -250,6 +251,7 @@ function App() {
             <aside className="app-sidebar" aria-label="Query results">
               <ResultPanel rows={rows} />
               <DiagnosticsPanel lastRun={lastRun} />
+              <DebugPanel lastRun={lastRun} />
             </aside>
           </section>
         </main>

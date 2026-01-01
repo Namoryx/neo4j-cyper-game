@@ -447,6 +447,67 @@ body {
   word-break: break-word;
 }
 
+.debug-card .debug-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.debug-meta {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.debug-query {
+  margin: 4px 0;
+  font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 12px;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.debug-attempts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.debug-attempt {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: #fff;
+}
+
+.debug-attempt summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.debug-attempt dl {
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 6px 12px;
+}
+
+.debug-attempt dt {
+  font-weight: 600;
+}
+
+.debug-pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 8px;
+  border-radius: 8px;
+  font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 12px;
+  overflow: auto;
+}
+
 .confetti {
   position: relative;
   width: 100%;

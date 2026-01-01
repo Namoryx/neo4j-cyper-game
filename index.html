@@ -11,7 +11,7 @@
     <script>
       const entryScript = document.getElementById('vite-entry');
       const isLocalDev = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-      const base = window.__APP_BASE__ || (location.pathname.includes('/neo4j-cyper-game/') ? '/neo4j-cyper-game/' : '/');
+      const base = window.__APP_BASE__ || '/neo4j-cyper-game/';
 
       const loadProdBundle = () => {
         if (!document.querySelector(`link[href="${base}assets/app.css"]`)) {
