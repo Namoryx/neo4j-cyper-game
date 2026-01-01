@@ -19,14 +19,15 @@ function Playground({ onResultsChange, onLastRun }) {
     const start = performance.now();
     setLoading(true);
     try {
-      const response = await runCypher(safeQuery, {});
-      const rows = toRows(response);
+      const { data, debug } = await runCypher(safeQuery, {});
+      const rows = toRows(data);
       onResultsChange?.(rows?.slice(0, 50) ?? []);
       const elapsed = Math.round(performance.now() - start);
-      onLastRun?.({ query: safeQuery, ms: elapsed, rowCount: rows?.length ?? 0, source: 'playground' });
+      onLastRun?.({ query: safeQuery, ms: elapsed, rowCount: rows?.length ?? 0, source: 'playground', debug });
     } catch (err) {
       setError(err?.message || '실행 중 오류가 발생했습니다.');
       onResultsChange?.([]);
+      onLastRun?.({ query: safeQuery, source: 'playground', error: err?.message, debug: err?.debug });
     } finally {
       setLoading(false);
     }

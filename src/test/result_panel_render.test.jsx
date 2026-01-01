@@ -28,10 +28,18 @@ describe('ResultPanel rendering with runCypher data', () => {
           },
         ],
       }),
+      text: async () => JSON.stringify({
+        records: [
+          {
+            keys: ['n'],
+            _fields: [{ name: 'Neo' }],
+          },
+        ],
+      }),
     });
 
-    const response = await runCypher('RETURN {name: "Neo"} AS n');
-    const rows = toRows(response);
+    const { data } = await runCypher('RETURN {name: "Neo"} AS n');
+    const rows = toRows(data);
 
     render(<ResultPanel rows={rows} />);
 

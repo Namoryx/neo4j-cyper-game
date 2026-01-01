@@ -22,10 +22,10 @@ function encodeBasicAuth(username, password) {
   return Buffer.from(`${username}:${password}`).toString('base64');
 }
 
-async function fetchWithConfig({ url, headers, body, timeoutMs = 5000 }) {
+async function requestWithDebug({ url, headers, body, timeoutMs = 5000, label }, debug) {
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
-  let json;
+  const entry = { url, body, headers, label };
 
   try {
     const res = await fetch(url, {
@@ -35,26 +35,37 @@ async function fetchWithConfig({ url, headers, body, timeoutMs = 5000 }) {
       signal: controller?.signal
     });
 
+    entry.status = res.status;
+    entry.ok = res.ok;
+    entry.statusText = res.statusText;
+    entry.responseText = await res.text();
+
     try {
-      json = await res.json();
+      entry.responseJson = JSON.parse(entry.responseText);
     } catch (error) {
-      // ignore JSON parse error here; the caller will decide how to handle
+      // ignore JSON parse error; we still expose the raw text
     }
 
     if (!res.ok) {
-      const message = json?.error?.message || json?.message || json?.error || 'Request failed';
-      throw new Error(message);
+      entry.error = entry.responseJson?.error?.message || entry.responseJson?.message || 'Request failed';
+      throw new Error(entry.error);
     }
+
+    return entry.responseJson;
   } catch (error) {
     if (error.name === 'AbortError') {
-      throw new Error('Request timed out');
+      entry.error = 'Request timed out';
+    } else {
+      entry.error = error?.message || 'Request failed';
+      if (error instanceof TypeError) {
+        entry.corsLikely = true;
+      }
     }
     throw error;
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
+    debug?.attempts?.push(entry);
   }
-
-  return json;
 }
 
 function buildDirectConfig(query, params) {
@@ -133,12 +144,14 @@ export async function runCypher(query, params = {}) {
 
   const directConfig = buildDirectConfig(query, params);
   const workerConfigs = buildWorkerConfigs(query, params);
+  const debug = { attempts: [] };
 
   try {
     if (directConfig) {
       try {
-        const json = await fetchWithConfig({ ...directConfig, timeoutMs: 5000 });
-        return normalizeResponse(json, query);
+        const json = await requestWithDebug({ ...directConfig, timeoutMs: 5000, label: 'direct' }, debug);
+        const normalized = normalizeResponse(json, query);
+        return { data: normalized, debug: { ...debug, lastEndpoint: directConfig.url, used: 'direct' } };
       } catch (error) {
         console.warn('Direct Neo4j call failed, falling back to worker.', error.message);
       }
@@ -146,8 +159,9 @@ export async function runCypher(query, params = {}) {
 
     for (const workerConfig of workerConfigs) {
       try {
-        const json = await fetchWithConfig({ ...workerConfig, timeoutMs: 2500 });
-        return normalizeResponse(json, query);
+        const json = await requestWithDebug({ ...workerConfig, timeoutMs: 2500, label: 'worker' }, debug);
+        const normalized = normalizeResponse(json, query);
+        return { data: normalized, debug: { ...debug, lastEndpoint: workerConfig.url, used: 'worker' } };
       } catch (workerError) {
         console.warn(
           `Worker call failed at ${workerConfig.url}, trying next candidate if available.`,
@@ -159,8 +173,9 @@ export async function runCypher(query, params = {}) {
   } catch (error) {
     const mock = getMockFallback(query);
     if (mock) {
-      return mock;
+      return { data: mock, debug: { ...debug, mockUsed: true } };
     }
+    error.debug = debug;
     throw error;
   }
 }

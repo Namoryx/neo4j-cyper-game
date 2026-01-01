@@ -10,9 +10,9 @@ const CYHER_SIMPLE_TEXT = '"RETURN 1 AS one" 결과를 반환하는 Cypher를 �
 vi.mock('../services/api.js', () => ({
   runCypher: vi.fn(async (query) => {
     if (query.trim() === 'RETURN 1 AS one') {
-      return { ok: true, data: { fields: ['one'], values: [[1]] } };
+      return { data: { fields: ['one'], values: [[1]] } };
     }
-    return { ok: true, data: { fields: [], values: [] } };
+    return { data: { fields: [], values: [] } };
   })
 }));
 
