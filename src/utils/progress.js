@@ -1,7 +1,15 @@
 const STORAGE_KEY = 'quokkaCypherProgress:v2';
 const LEGACY_STORAGE_KEY = 'quokkaCypherProgress:v1';
 
-const defaultProgress = { storyIndex: 0, records: {} };
+export const DEFAULT_STORY_THEME = 'general';
+
+const defaultProgress = {
+  storyIndex: 0,
+  storyTheme: DEFAULT_STORY_THEME,
+  storyIndices: {},
+  soundtrack: 'A',
+  records: {},
+};
 
 function migrateLegacyProgress(legacy) {
   if (!legacy?.records) return { ...defaultProgress };
@@ -21,6 +29,9 @@ function migrateLegacyProgress(legacy) {
 
   return {
     storyIndex: legacy?.storyIndex ?? 0,
+    storyTheme: DEFAULT_STORY_THEME,
+    storyIndices: {},
+    soundtrack: 'A',
     records: migratedRecords,
   };
 }
@@ -34,6 +45,9 @@ export function loadProgress() {
       const parsed = JSON.parse(raw);
       return {
         storyIndex: parsed?.storyIndex ?? 0,
+        storyTheme: parsed?.storyTheme ?? DEFAULT_STORY_THEME,
+        storyIndices: parsed?.storyIndices ?? {},
+        soundtrack: parsed?.soundtrack ?? 'A',
         records: parsed?.records ?? {},
       };
     }
@@ -102,9 +116,41 @@ export function recordAttempt(prevProgress, { questionId, isCorrect, timestamp =
   return nextProgress;
 }
 
-export function updateStoryIndex(prevProgress, nextIndex) {
+export function updateStoryIndex(prevProgress, nextIndex, theme = null) {
   const base = prevProgress ?? { ...defaultProgress };
-  const nextProgress = { ...base, storyIndex: Math.max(0, nextIndex ?? 0) };
+  const themeKey = theme ?? base.storyTheme ?? DEFAULT_STORY_THEME;
+  const storyIndices = { ...(base.storyIndices ?? {}) };
+  storyIndices[themeKey] = Math.max(0, nextIndex ?? 0);
+
+  const nextProgress = {
+    ...base,
+    storyTheme: themeKey,
+    storyIndices,
+    storyIndex: storyIndices[themeKey],
+  };
+  saveProgress(nextProgress);
+  return nextProgress;
+}
+
+export function updateStoryTheme(prevProgress, nextTheme) {
+  const base = prevProgress ?? { ...defaultProgress };
+  const themeKey = nextTheme ?? DEFAULT_STORY_THEME;
+  const storyIndices = { ...(base.storyIndices ?? {}) };
+  const nextIndex = storyIndices[themeKey] ?? 0;
+
+  const nextProgress = {
+    ...base,
+    storyTheme: themeKey,
+    storyIndex: nextIndex,
+    storyIndices,
+  };
+  saveProgress(nextProgress);
+  return nextProgress;
+}
+
+export function updateSoundtrack(prevProgress, soundtrack) {
+  const base = prevProgress ?? { ...defaultProgress };
+  const nextProgress = { ...base, soundtrack: soundtrack ?? base.soundtrack ?? 'A' };
   saveProgress(nextProgress);
   return nextProgress;
 }

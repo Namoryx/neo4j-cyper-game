@@ -9,8 +9,19 @@ import Playground from './components/Playground.jsx';
 import DataBrowser from './components/DataBrowser.jsx';
 import Curriculum from './components/Curriculum.jsx';
 import MissionBanner from './components/MissionBanner.jsx';
+import StoryThemes from './components/StoryThemes.jsx';
+import SettingsPanel from './components/SettingsPanel.jsx';
 import questions from './data/questions.json';
-import { countPracticeStats, loadProgress, recordAttempt, updateStoryIndex, weakScore } from './utils/progress.js';
+import {
+  countPracticeStats,
+  loadProgress,
+  recordAttempt,
+  updateSoundtrack,
+  updateStoryIndex,
+  updateStoryTheme,
+  weakScore,
+  DEFAULT_STORY_THEME,
+} from './utils/progress.js';
 
 function App() {
   const [speech, setSpeech] = useState('문제 풀어봐!');
@@ -22,16 +33,30 @@ function App() {
   const [filters, setFilters] = useState({ domain: 'all', concepts: [], track: 'all', lesson: 'all', search: '' });
   const [filterDraft, setFilterDraft] = useState({ domain: 'all', concepts: [], track: 'all', lesson: 'all', search: '' });
   const [onlyWeak, setOnlyWeak] = useState(false);
-  const [progress, setProgress] = useState({ storyIndex: 0, records: {} });
+  const [progress, setProgress] = useState({
+    storyIndex: 0,
+    storyTheme: DEFAULT_STORY_THEME,
+    storyIndices: {},
+    soundtrack: 'A',
+    records: {},
+  });
+  const [storyTheme, setStoryTheme] = useState(DEFAULT_STORY_THEME);
+  const [soundtrack, setSoundtrack] = useState('A');
   const [initialStoryIndex, setInitialStoryIndex] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [lastRun, setLastRun] = useState(null);
 
   useEffect(() => {
     const loaded = loadProgress();
+    const themeFromStorage = loaded.storyTheme ?? DEFAULT_STORY_THEME;
+    const soundtrackFromStorage = loaded.soundtrack ?? 'A';
+    const storyIndexFromTheme = loaded.storyIndices?.[themeFromStorage] ?? loaded.storyIndex ?? 0;
+
     setProgress(loaded);
-    setInitialStoryIndex(loaded.storyIndex ?? 0);
-    setActiveIndex(loaded.storyIndex ?? 0);
+    setStoryTheme(themeFromStorage);
+    setSoundtrack(soundtrackFromStorage);
+    setInitialStoryIndex(storyIndexFromTheme);
+    setActiveIndex(storyIndexFromTheme);
   }, []);
 
   const domains = useMemo(() => ['all', ...new Set(questions.map((q) => q.domain))], []);
@@ -68,7 +93,42 @@ function App() {
     return filtered;
   }, [activeFilters, onlyWeak, progress.records]);
 
-  const activeQuestions = mode === 'story' ? questions : practiceQuestions;
+  const storyThemes = useMemo(
+    () => [
+      {
+        id: 'general',
+        title: '기본 그래프',
+        description: 'Cypher 핵심 문법과 패턴을 차근차근 따라가세요.',
+        domainLabel: 'general',
+      },
+      {
+        id: 'shopping',
+        title: '쇼핑 그래프',
+        description: '장바구니, 주문, 추천 그래프에서 데이터를 찾으세요.',
+        domainLabel: 'shopping',
+      },
+      {
+        id: 'knowledge',
+        title: '지식 그래프',
+        description: '지식 그래프 탐색과 관계 패턴을 연습하세요.',
+        domainLabel: 'knowledge',
+      },
+      {
+        id: 'social',
+        title: '소셜 네트워크',
+        description: '친구 추천과 네트워크 확장 문제를 해결하세요.',
+        domainLabel: 'social',
+      },
+    ],
+    [],
+  );
+
+  const storyQuestions = useMemo(
+    () => questions.filter((q) => q.domain === storyTheme),
+    [storyTheme],
+  );
+
+  const activeQuestions = mode === 'story' ? storyQuestions : practiceQuestions;
 
   const practiceStats = useMemo(() => countPracticeStats(progress.records), [progress.records]);
 
@@ -82,7 +142,7 @@ function App() {
 
   const handleIndexPersist = (nextIndex) => {
     if (mode !== 'story') return;
-    setProgress((prev) => updateStoryIndex(prev, nextIndex));
+    setProgress((prev) => updateStoryIndex(prev, nextIndex, storyTheme));
     setActiveIndex(nextIndex);
   };
 
@@ -90,11 +150,13 @@ function App() {
     setRows([]);
     setImpact(null);
     if (mode === 'story') {
-      setActiveIndex(progress.storyIndex ?? 0);
+      const nextIndex = progress.storyIndices?.[storyTheme] ?? progress.storyIndex ?? 0;
+      setInitialStoryIndex(nextIndex);
+      setActiveIndex(nextIndex);
     } else {
       setActiveIndex(0);
     }
-  }, [mode, progress.storyIndex]);
+  }, [mode, progress.storyIndex, progress.storyIndices, storyTheme]);
 
   useEffect(() => {
     setRows([]);
@@ -116,6 +178,24 @@ function App() {
     setActiveTab('quiz');
   };
 
+  const handleStoryThemeChange = (nextTheme) => {
+    setStoryTheme(nextTheme);
+    setProgress((prev) => {
+      const updated = updateStoryTheme(prev, nextTheme);
+      const nextIndex = updated.storyIndices?.[nextTheme] ?? updated.storyIndex ?? 0;
+      setInitialStoryIndex(nextIndex);
+      setActiveIndex(nextIndex);
+      return updated;
+    });
+    setMode('story');
+    setActiveTab('quiz');
+  };
+
+  const handleSoundtrackChange = (nextSoundtrack) => {
+    setSoundtrack(nextSoundtrack);
+    setProgress((prev) => updateSoundtrack(prev, nextSoundtrack));
+  };
+
   return (
     <div className={`app ${impact ? `app--impact-${impact}` : ''}`}>
       <div className="app-shell">
@@ -128,7 +208,7 @@ function App() {
             {activeTab === 'quiz' ? (
               mode === 'story' ? (
                 <p>
-                  현재 <strong>{activeIndex + 1}</strong> / 총 <strong>{questions.length}</strong>
+                  현재 <strong>{activeIndex + 1}</strong> / 총 <strong>{activeQuestions.length}</strong>
                 </p>
               ) : (
                 <p>
@@ -188,6 +268,24 @@ function App() {
               <div className="app-panels">
               {activeTab === 'quiz' ? (
                 <>
+                  {mode === 'story' ? (
+                    <section className="story-section" aria-label="스토리 테마 안내">
+                      <div className="story-section__header">
+                        <p className="story-section__eyebrow">Story Mode</p>
+                        <div>
+                          <h2 className="story-section__title">4가지 테마 중 하나를 골라 진행하세요</h2>
+                          <p className="story-section__hint">
+                            도메인별로 준비된 문제 세트가 있습니다. 테마를 바꾸면 해당 영역의 문제로 바로 이동합니다.
+                          </p>
+                        </div>
+                      </div>
+                      <StoryThemes
+                        themes={storyThemes}
+                        activeTheme={storyTheme}
+                        onSelect={handleStoryThemeChange}
+                      />
+                    </section>
+                  ) : null}
                   <FilterPanel
                     domains={domains}
                     concepts={concepts}
@@ -223,7 +321,7 @@ function App() {
                     <MissionBanner questions={questions} progress={progress.records} />
                   ) : null}
                   <Quiz
-                    key={`${mode}-${activeFilters.domain}-${activeFilters.track}-${activeFilters.lesson}-${activeFilters.search}-${activeFilters.concepts.join(',')}-${onlyWeak}-${activeQuestions.length}`}
+                    key={`${mode}-${storyTheme}-${activeFilters.domain}-${activeFilters.track}-${activeFilters.lesson}-${activeFilters.search}-${activeFilters.concepts.join(',')}-${onlyWeak}-${activeQuestions.length}`}
                     questions={activeQuestions}
                     startingIndex={mode === 'story' ? initialStoryIndex : 0}
                     onSpeechChange={setSpeech}
@@ -250,6 +348,7 @@ function App() {
             <aside className="app-sidebar" aria-label="Query results">
               <ResultPanel rows={rows} />
               <DiagnosticsPanel lastRun={lastRun} />
+              <SettingsPanel soundtrack={soundtrack} onSoundtrackChange={handleSoundtrackChange} />
             </aside>
           </section>
         </main>
